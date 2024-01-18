@@ -9,8 +9,6 @@ from awtube.exceptions import *
 import sys
 import pytest
 
-import rclpy
-
 
 # async def spinning(node: AWTubeNode):
 #     while rclpy.ok():
