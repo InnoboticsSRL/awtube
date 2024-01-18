@@ -1,0 +1,42 @@
+#!/usr/bin/env python3
+
+import asyncio
+from gbc_ros2_driver.aw_types import *
+from gbc_ros2_driver.gbc_types import *
+from gbc_ros2_driver.commands import *
+from gbc_ros2_driver.exceptions import *
+from gbc_ros2_driver.awtube_node import AWTubeNode
+import sys
+import pytest
+
+import rclpy
+
+
+async def spinning(node: AWTubeNode):
+    while rclpy.ok():
+        rclpy.spin_once(node, timeout_sec=0.01)
+        await asyncio.sleep(0.001)
+        sys.exit(0)
+
+
+async def run(args, loop: asyncio.AbstractEventLoop):
+    rclpy.init(args=args)
+    awtube_node = AWTubeNode()
+
+    spin_task = loop.create_task(spinning(awtube_node))
+    connect_task = loop.create_task(awtube_node.listen())
+    try:
+        await asyncio.gather(spin_task, connect_task)
+    except asyncio.exceptions.CancelledError:
+        pass
+
+    awtube_node.destroy_node()
+    rclpy.shutdown()
+
+
+def test_ros2():
+    with pytest.raises(SystemExit) as pytest_wrapped_e:
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(run(None, loop=loop))
+    assert pytest_wrapped_e.type == SystemExit
+    assert pytest_wrapped_e.value.code == 0
