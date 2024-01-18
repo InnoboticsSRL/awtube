@@ -128,7 +128,7 @@ class WebsocketThread(ABC, threading.Thread):
             message: The string message to send over the socket.
         """
         self.outgoing.put(message)
-        print(message)
+        # print(message)
 
     async def listen(self):
         """ Listen to the websocket and local outgoing queue """

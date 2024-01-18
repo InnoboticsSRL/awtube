@@ -234,7 +234,7 @@ class AWTube(WebsocketThread):
         """ Send moveLine command. """
         pose = Pose(position=Position(**translation),
                     orientation=Quaternion(**rotation))
-        self.send(get_stream_move_line(pose, debug=True, tag=tag))
+        self.send(get_stream_move_line(pose, debug=False, tag=tag))
         self._logger.debug('Sent moveLine command.')
         return self
 
