@@ -11,48 +11,8 @@ import logging as lg
 import time
 import asyncio
 import queue
-# from statemachine import StateMachine, State
 
 TIMEOUT = 5
-
-# TODO: implement function to manage buffer
-# TODO: better checks before creating json message to send
-# TODO: in get_state get the io feedback also
-# TODO: way to test connection, heartbeat or ping() pong()
-# TODO: way to stop robot, maybe a safe slow down then stop !
-# TODO: way to get the state of task when sent to robot
-# TODO: move_joints_interpolated maybe put multiple points in the same json message
-# TODO: better logging that ideally works even with ros2 logging
-# TODO: fix chaining to put everything in the same json command
-# TODO: probably the right thing to do is send the heartbeat back only when recieved, not every tot secs
-# TODO: problematic taking the last state, how do we know when it has been updated, maybe the heartbeat fixes that
-
-
-# class TaskStateMachine(StateMachine):
-#     IDLE = State(initial=True)
-#     RUNNING = State()
-#     FINISHED = State()
-#     STOPPED = State()
-
-#     cycle = (
-#         IDLE.to(RUNNING)
-#         | RUNNING.to(IDLE)
-#         | RUNNING.to(STOPPED)
-#         | RUNNING.to(FINISHED)
-#         | STOPPED.to(IDLE))
-
-#     def before_cycle(self, event: str, source: State, target: State, message: str = ""):
-#         message = ". " + message if message else ""
-#         return f"Running {event} from {source.id} to {target.id}{message}"
-
-#     def on_enter_IDLE(self):
-#         print("IDLE.")
-
-#     def on_enter_RUNNING(self):
-#         print("RUNNING TASK.")
-
-#     def on_enter_STOPPED(self):
-#         print("STOPPED.")
 
 
 class AWTube(WebsocketThread):
