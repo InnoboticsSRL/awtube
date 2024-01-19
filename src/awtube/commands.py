@@ -3,12 +3,13 @@ from awtube.aw_types import *
 import json
 
 
-def get_stream_move_joints(
+def stream_move_joints_cmd(
         joints: JointStates,
         stream_index: int = 0,
         tag: int = 0,
         kinematics_configuration_index: int = 0,
         debug: bool = False) -> str:
+    """ Create moveJoints json command """
     s = Stream(stream=StreamConfig(
         streamIndex=stream_index,
         items=[
@@ -28,12 +29,13 @@ def get_stream_move_joints(
     return s
 
 
-def get_stream_move_joints_interpolated(
+def stream_move_joints_interpolated_cmd(
         joints: JointStates,
         stream_index: int = 0,
         tag: int = 0,
         kinematics_configuration_index: int = 0,
         debug: bool = False) -> str:
+    """ Create moveJointsInterpolated json command """
     s = Stream(stream=StreamConfig(
         streamIndex=stream_index,
         items=[
@@ -52,12 +54,13 @@ def get_stream_move_joints_interpolated(
     return s
 
 
-def get_solo_activity_move_joints(
+def solo_activity_move_joints_cmd(
         joints: JointStates,
         stream_index: int = 0,
         tag: int = 0,
         kinematics_configuration_index: int = 0,
         debug: bool = False) -> str:
+    """ Create activityMoveJoints json command """
     return json.dumps({
         "command": {
             "soloActivity": {
@@ -75,7 +78,7 @@ def get_solo_activity_move_joints(
     })
 
 
-def get_stream_move_line(pose: Pose, stream_index: int = 0, tag: int = 0, kinematics_configuration_index: int = 0, debug: bool = False) -> str:
+def stream_move_line_cmd(pose: Pose, stream_index: int = 0, tag: int = 0, kinematics_configuration_index: int = 0, debug: bool = False) -> str:
     s = Stream(stream=StreamConfig(
         streamIndex=stream_index,
         enable_end_program=False,
@@ -191,7 +194,7 @@ def get_stream_move_to_position(
     return s
 
 
-def get_stream_move_joints_at_vel(
+def stream_move_joints_cmd_at_vel(
         joints: JointStates,
         stream_index: int = 0,
         tag: int = 0,

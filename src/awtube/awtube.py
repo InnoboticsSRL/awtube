@@ -195,7 +195,7 @@ class AWTube(WebsocketThread):
         """ Send moveJoints command. """
         # TODO: better checks
         joints = JointStates(positions=joint_positions)
-        self.send(get_stream_move_joints(joints, tag=tag))
+        self.send(stream_move_joints_cmd(joints, tag=tag))
         self._logger.debug('Sent moveJoints command.')
         return self
 
@@ -210,7 +210,7 @@ class AWTube(WebsocketThread):
     def move_joints_vel(self, joint_velocities: tp.List[float]) -> AWTube:
         """ Send moveJointsAtVel command. """
         joints = JointStates(velocities=joint_velocities)
-        self.send(get_stream_move_joints_at_vel(joints))
+        self.send(stream_move_joints_cmd_at_vel(joints))
         self._logger.debug('Sent moveJointsAtVel command.')
         return self
 
@@ -223,7 +223,7 @@ class AWTube(WebsocketThread):
         joints = JointStates(positions=joint_positions,
                              velocities=joint_velocities)
         if self._stream_status:
-            self.put_txbuffer(get_stream_move_joints_interpolated(
+            self.put_txbuffer(stream_move_joints_interpolated_cmd(
                 joints, tag=tag, debug=debug))
             self._logger.debug('Sent moveJointsInterpolated command.')
         else:
@@ -234,14 +234,14 @@ class AWTube(WebsocketThread):
         """ Send moveLine command. """
         pose = Pose(position=Position(**translation),
                     orientation=Quaternion(**rotation))
-        self.send(get_stream_move_line(pose, debug=True, tag=tag))
+        self.send(stream_move_line_cmd(pose, debug=False, tag=tag))
         self._logger.debug('Sent moveLine command.')
         return self
 
     def pause(self) -> AWTube:
         """ Send pause command. """
         return NotImplementedError
-        self.send(get_stream_pause_program(debug=True))
+        self.send(get_stream_pause_program(debug=False))
         self._logger.debug('Sent pause command.')
         return self
 
