@@ -328,4 +328,4 @@ class MoveJointsBuilder(SimpleMoveBuilder):
 
 cont = RealActivityController()
 a = MoveJointsBuilder(cont).relative().joints([0, 0, 0, 0, 0]).build()
-print(a.__dict__)
+# print(a.__dict__)
