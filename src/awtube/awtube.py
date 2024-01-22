@@ -15,6 +15,20 @@ import queue
 TIMEOUT = 5
 
 
+# async def transfer_element(a: queue.Queue, b: queue.Queue, stream_capacity: int, stream_capacity_min: int = 1) -> None:
+#     """ Coroutine to move data from queue a to queue b respecting the capacity"""
+#     if a.empty():
+#         # Nothing to transfer
+#         await asyncio.sleep(1)
+#     if stream_capacity > stream_capacity_min:
+#         # We can move the element
+#         try:
+#             # try to put in a
+#             b.put(a.get())
+#         except queue.Full:
+#             await asyncio.sleep(0.1)
+
+
 class AWTube(WebsocketThread):
     def __init__(self,
                  robot_ip: str = "0.0.0.0",
@@ -31,6 +45,9 @@ class AWTube(WebsocketThread):
         self.blocking = blocking
         self.__txbuffer = queue.Queue()
         self.url = f"ws://{self.__robot_ip}:{self.__port}/ws"
+
+        # Record last time properties were updated
+        self.property_records: dict = {}
 
         # TODO
         self._config_path = config_path
@@ -68,6 +85,16 @@ class AWTube(WebsocketThread):
         self._tasks.append(self.echo_heartbeat)
         self._tasks.append(self.reset_enable)
 
+    @property
+    def machine_status(self, timestamp: time.time = False) -> None:
+        return self._machine_status if not timestamp else (self._machine_status, self.property_records[self.machine_status.__name__])
+
+    @machine_status.setter
+    def machine_status(self, new_val: MachineStatus) -> None:
+        # keep track of when property was last updated
+        self._machine_status = new_val
+        self.property_records['_machine_status'] = time.time()
+
     async def reset(self) -> None:
         self._logger.debug('Reset machine.')
         await asyncio.sleep(1)
@@ -102,7 +129,7 @@ class AWTube(WebsocketThread):
                     heartbeat=self._machine_status.heartbeat))
                 self._logger.debug(
                     f'Sent heartbeat:{self._machine_status.heartbeat}')
-            await asyncio.sleep(0.2)
+            await asyncio.sleep(1)
 
     def put_txbuffer(self, message: str) -> None:
         """ Put command in queue to send respecting the capacity of the websocket stream.
@@ -157,7 +184,7 @@ class AWTube(WebsocketThread):
                     torques=[all['t'] for all in el['act']]
                 ))
 
-            self._machine_status = MachineStatus(**js['status']['machine'])
+            self.machine_status = MachineStatus(**js['status']['machine'])
 
             # TODO: stream array id ??????
             self._stream_status = StreamStatus(**js['stream'][0])
@@ -168,8 +195,8 @@ class AWTube(WebsocketThread):
             self.received_message = True
 
             # record timed heartbeat
-            self.timed_heartbeat = (
-                self._machine_status.heartbeat, time.time())
+            # self.timed_heartbeat = (
+            #     self.machine_status.heartbeat, time.time())
 
         except Exception as e:
             self._logger.error(e)
@@ -185,11 +212,11 @@ class AWTube(WebsocketThread):
         # self.send_heartbeat()
 
     def send_heartbeat(self) -> None:
-        if self._machine_status:
+        if self.machine_status:
             self.send(get_machine_command_heartbeat(
-                heartbeat=self._machine_status.heartbeat))
+                heartbeat=self.machine_status.heartbeat))
             self._logger.debug(
-                f'Sent heartbeat:{self._machine_status.heartbeat}')
+                f'Sent heartbeat:{self.machine_status.heartbeat}')
 
     def move_joints(self, joint_positions: tp.List[float], tag: int = 0, blocking: bool = False) -> AWTube:
         """ Send moveJoints command. """
