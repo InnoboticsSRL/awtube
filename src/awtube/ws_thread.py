@@ -58,7 +58,7 @@ class WebsocketThread(ABC, threading.Thread):
 
     """
 
-    def __init__(self, url: str, headers: Dict[str, str] = None):
+    def __init__(self, url: str, headers: Dict[str, str] = None, queue_size: int = 100):
         """
         Args:
             url: Websocket url to connect to.
@@ -67,10 +67,11 @@ class WebsocketThread(ABC, threading.Thread):
         super().__init__()
         self.url = url
         self.headers = headers if headers else dict()
+        self.queue_size = queue_size
 
         self.loop: asyncio.AbstractEventLoop = None
         self.killed: bool = False
-        self.outgoing = queue.Queue()
+        self.outgoing = queue.Queue(maxsize=queue_size)
         # coroutines to be run asynchronously later they get the websocket as argument
         self._tasks = [self.listen_queue, self.listen_socket]
 
