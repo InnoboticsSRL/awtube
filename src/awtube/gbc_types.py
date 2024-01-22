@@ -36,17 +36,20 @@ class SyncType(IntEnum):
 
 class OperationError(IntEnum):
     NONE = 0
-    OPERATION_NOT_ENABLED = 1
-    INVALID_ARC = 2
-    TOOL_INDEX_OUT_OF_RANGE = 3
-    JOINT_LIMIT_EXCEEDED = 4
-    KINEMATICS_FK_INVALID_VALUE = 5
-    KINEMATICS_IK_INVALID_VALUE = 6
-    KINEMATICS_INVALID_KIN_CHAIN_PARAMS = 7
-    JOINT_DISCONTINUITY = 8
-    JOINT_OVER_SPEED = 9
-    INVALID_ROTATION = 10
-    CONFIG_RELOADED = 11
+    HLC_HEARTBEAT_LOST = 1
+    OPERATION_NOT_ENABLED = 2
+    INVALID_ARC = 3
+    TOOL_INDEX_OUT_OF_RANGE = 4
+    JOINT_LIMIT_EXCEEDED = 5
+    KINEMATICS_FK_INVALID_VALUE = 6
+    KINEMATICS_IK_INVALID_VALUE = 7
+    KINEMATICS_INVALID_KIN_CHAIN_PARAMS = 8
+    JOINT_DISCONTINUITY = 9
+    JOINT_OVER_SPEED = 10
+    INVALID_ROTATION = 11
+    CONFIG_RELOADED = 12
+    KINEMATICS_ENVELOPE_VIOLATION = 13
+    KINEMATICS_NEAR_SINGULARITY = 14
 
 
 class ActivityType(IntEnum):
@@ -68,6 +71,7 @@ class ActivityType(IntEnum):
     MOVEJOINTSINTERPOLATED = 16
     TOOLOFFSET = 22
 
+
 class ControlWord(IntEnum):
     # Startup => Not Ready to Switch ON
     RESET = 0
@@ -78,7 +82,8 @@ class ControlWord(IntEnum):
     #  Fault => Switch On Disabled
     FAULTRESET = 15
     FAULTRESET128 = 128
-    
+
+
 class MachineStatus(BaseModel):
     # Indicates an operation error in GBC that is recoverable
     operation_error: OperationError = Field(0, alias='operationError')
@@ -107,6 +112,7 @@ class StreamStatus(BaseModel):
     time: int = Field(None)
     read_count: int = Field(None, alias='readCount')
     write_count: int = Field(None, alias='writeCount')
+
 
 class ActivityStatus(BaseModel):
     tag: int = Field(None)
@@ -251,16 +257,14 @@ class MoveLineStreamItem(BaseModel):
 class PauseProgramStreamItem(BaseModel):
     activity_type: ActivityType = Field(
         ActivityType.PAUSEPROGRAM, serialization_alias='activityType')
-    
+
 
 # state machine for connection
 class MachineCommand(BaseModel):
-    machine:int = Field(0)
+    machine: int = Field(0)
     control_word: ControlWord = Field(
-      None, serialization_alias='controlWord'
+        None, serialization_alias='controlWord'
     )
-
-
 
 
 class Stream(BaseModel):
