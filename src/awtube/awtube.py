@@ -38,7 +38,8 @@ class AWTube(WebsocketThread):
                  blocking: bool = True,
                  name: str = "AWTube",
                  log_level: int | str = lg.DEBUG,
-                 logger: lg.Logger | None = None):
+                 logger: lg.Logger | None = None,
+                 queue_size: int = 100):
         self._name = name
         self.__robot_ip = robot_ip
         self.__port = port
@@ -81,9 +82,9 @@ class AWTube(WebsocketThread):
         # self._current_cmd_done = False
 
         # Start yielding messages from txbuffer
-        self._tasks.append(self.send_cmds)
-        self._tasks.append(self.echo_heartbeat)
-        self._tasks.append(self.reset_enable)
+        self._tasks.append(self.move_cmds_task)
+        self._tasks.append(self.echo_heartbeat_task)
+        self._tasks.append(self.reset_enable_task)
 
     @property
     def machine_status(self, timestamp: time.time = False) -> None:
@@ -117,11 +118,11 @@ class AWTube(WebsocketThread):
             control_word=ControlWord.FAULTRESET))
         return self
 
-    async def reset_enable(self, socket: WebsocketThread) -> None:
+    async def reset_enable_task(self, socket: WebsocketThread) -> None:
         await self.reset()
         await self.enable()
 
-    async def echo_heartbeat(self, socket: WebsocketThread) -> None:
+    async def echo_heartbeat_task(self, socket: WebsocketThread) -> None:
         """ Get latest heartbeat sent and periodically every 200 ms send it back """
         while True:
             if self._machine_status:
@@ -139,27 +140,35 @@ class AWTube(WebsocketThread):
         """
         self.__txbuffer.put(message)
 
-    async def send_cmds(self, socket: WebsocketThread) -> None:
+    async def move_cmds(self):
         """ asyncio coroutine which takes messages from txbuffer and puts them in the outter queue,
             respecting the capacity of the stream. """
-        while True:
-            if self._stream_status:
-                print(f'Capacity: {self._stream_status.capacity}')
+        if self.__txbuffer.empty():
+            # TODO: decide on good sleep interval
+            # sleep and check again
+            await asyncio.sleep(0.1)
+            return
+        # elif self._stream_status.read_count != self._stream_status.write_count:
+        #     await asyncio.sleep(0.01)
+        if not self._stream_status:
+            # if no feedback recieved yet
+            await asyncio.sleep(0.1)
+            return
+        if self._stream_status.capacity >= 15:
+            # get from txbuffer and send
+            task = self.__txbuffer.get(block=False)
+            self.send(task)
+            # We wait to give time to server to update capacity
+            await asyncio.sleep(0.02)
+            return
+        else:
+            await asyncio.sleep(0.1)
 
-            if self.__txbuffer.empty():
-                # TODO: decide on good sleep interval
-                # sleep and check again
-                await asyncio.sleep(0.1)
-            # elif self._stream_status.read_count != self._stream_status.write_count:
-            #     await asyncio.sleep(0.01)
-            elif not self._stream_status:
-                # if no feedback recieved yet
-                await asyncio.sleep(0.1)
-            elif self._stream_status.capacity >= 15:
-                # get from txbuffer and send
-                self.send(self.__txbuffer.get())
-                # await asyncio.sleep(0.02)
-                # print('Put new command in txbuffer.')
+    async def move_cmds_task(self, socket: WebsocketThread) -> None:
+        """ Task to run move_cmds in a loop. """
+        while True:
+            await self.move_cmds()
+        print('Task move_cmds finished!!!!')
 
     def get_state(self, message: str) -> None:
         """ Here get last n telemetry points from ws which will be used as the state of the robot. """

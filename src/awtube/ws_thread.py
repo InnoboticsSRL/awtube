@@ -71,7 +71,8 @@ class WebsocketThread(ABC, threading.Thread):
 
         self.loop: asyncio.AbstractEventLoop = None
         self.killed: bool = False
-        self.outgoing = queue.Queue(maxsize=queue_size)
+        # self.outgoing = queue.Queue(maxsize=queue_size)
+        self.outgoing = queue.Queue()
         # coroutines to be run asynchronously later they get the websocket as argument
         self._tasks = [self.listen_queue, self.listen_socket]
 
