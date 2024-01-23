@@ -168,7 +168,6 @@ class AWTube(WebsocketThread):
         """ Task to run move_cmds in a loop. """
         while True:
             await self.move_cmds()
-        print('Task move_cmds finished!!!!')
 
     def get_state(self, message: str) -> None:
         """ Here get last n telemetry points from ws which will be used as the state of the robot. """
