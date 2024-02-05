@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """
     WebsocketThread client abstract class
 
@@ -12,12 +10,17 @@
 import websockets
 import asyncio
 import queue
+import logging
 # import ssl
 # import sys
 import threading
 from typing import Dict
 from awtube.command_reciever import CommandReciever
 from awtube.observers.observer import Observer
+
+# disable websockets logging
+logging.getLogger("websockets.client").addHandler(logging.NullHandler())
+logging.getLogger("websockets.client").propagate = False
 
 
 class WebsocketThread(threading.Thread, CommandReciever):
@@ -36,7 +39,7 @@ class WebsocketThread(threading.Thread, CommandReciever):
         super().__init__()
         self.url = url
         self.headers = headers if headers else dict()
-        
+
         # frequency of tasks
         self.__freq = freq
         self._rate = 1/self.__freq

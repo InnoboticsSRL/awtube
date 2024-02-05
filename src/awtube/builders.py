@@ -2,6 +2,7 @@ import typing as tp
 from enum import IntEnum
 from pydantic import BaseModel, Field
 from abc import ABC, abstractmethod
+from awtube.errors.gbc_errors import OperationError
 
 
 class ActivityBuilder(BaseModel):
@@ -39,19 +40,19 @@ class SyncType(IntEnum):
     AT_TICK = 2
 
 
-class OperationError(IntEnum):
-    NONE = 0
-    OPERATION_NOT_ENABLED = 1
-    INVALID_ARC = 2
-    TOOL_INDEX_OUT_OF_RANGE = 3
-    JOINT_LIMIT_EXCEEDED = 4
-    KINEMATICS_FK_INVALID_VALUE = 5
-    KINEMATICS_IK_INVALID_VALUE = 6
-    KINEMATICS_INVALID_KIN_CHAIN_PARAMS = 7
-    JOINT_DISCONTINUITY = 8
-    JOINT_OVER_SPEED = 9
-    INVALID_ROTATION = 10
-    CONFIG_RELOADED = 11
+# class OperationError(IntEnum):
+#     NONE = 0
+#     OPERATION_NOT_ENABLED = 1
+#     INVALID_ARC = 2
+#     TOOL_INDEX_OUT_OF_RANGE = 3
+#     JOINT_LIMIT_EXCEEDED = 4
+#     KINEMATICS_FK_INVALID_VALUE = 5
+#     KINEMATICS_IK_INVALID_VALUE = 6
+#     KINEMATICS_INVALID_KIN_CHAIN_PARAMS = 7
+#     JOINT_DISCONTINUITY = 8
+#     JOINT_OVER_SPEED = 9
+#     INVALID_ROTATION = 10
+#     CONFIG_RELOADED = 11
 
 
 class ActivityType(IntEnum):

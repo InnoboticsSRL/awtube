@@ -1,6 +1,8 @@
 import typing as tp
 from enum import IntEnum
 from pydantic import BaseModel, Field
+from awtube.errors.gbc_errors import OperationError
+from awtube.aw_types import Position
 
 
 class StreamState(IntEnum):
@@ -32,24 +34,6 @@ class SyncType(IntEnum):
     DURATION_MS = 1
     # Ensure move ends at the specified clock tick (not currently supported)
     AT_TICK = 2
-
-
-class OperationError(IntEnum):
-    NONE = 0
-    HLC_HEARTBEAT_LOST = 1
-    OPERATION_NOT_ENABLED = 2
-    INVALID_ARC = 3
-    TOOL_INDEX_OUT_OF_RANGE = 4
-    JOINT_LIMIT_EXCEEDED = 5
-    KINEMATICS_FK_INVALID_VALUE = 6
-    KINEMATICS_IK_INVALID_VALUE = 7
-    KINEMATICS_INVALID_KIN_CHAIN_PARAMS = 8
-    JOINT_DISCONTINUITY = 9
-    JOINT_OVER_SPEED = 10
-    INVALID_ROTATION = 11
-    CONFIG_RELOADED = 12
-    KINEMATICS_ENVELOPE_VIOLATION = 13
-    KINEMATICS_NEAR_SINGULARITY = 14
 
 
 class ActivityType(IntEnum):
@@ -102,6 +86,25 @@ class MachineStatus(BaseModel):
     target: int = Field(None)
     # Number of times we have tried to connect to the target
     target_connect_retry_cnt: int = Field(None, alias='targetConnectRetryCnt')
+
+
+class KinematicsConfigurationStatus(BaseModel):
+    # Indicates if soft limits (machine extents) are disabled
+    limits_disabled: bool = Field(False, alias='limitsDisabled')
+    # Feed rate target value
+    fro_target: int = Field(0, alias='froTarget')
+    # Feed rate actual value
+    fro_actual: int = Field(0, alias='froActual')
+    # Configuration (for example, shoulder/elbow/wrist) of the kinematics configuration
+    configuration: int = Field(0, alias='configuration')
+    # Current tool index
+    tool_index: int = Field(0, alias='toolIndex')
+    # Word containing the fault history (faults that were active when the machine entered the fault state)
+    is_near_singularity: bool = Field(False, alias='isNearSingularity')
+    # Position
+    # position: Position = Field(None)
+    # Offset
+    # offset: Position = Field(None)
 
 
 class StreamStatus(BaseModel):
@@ -200,6 +203,12 @@ class PositionReference(IntEnum):
     ABSOLUTE = 0
     RELATIVE = 1
     MOVESUPERIMPOSED = 2
+
+
+class MachineTarget(IntEnum):
+    NONE = 0
+    FIELDBUS = 1
+    SIMULATION = 2
 
 
 class CartesianPosition(BaseModel):

@@ -1,10 +1,13 @@
 from __future__ import annotations
+from collections import deque
 import json
 import time
+
 from awtube.gbc_types import StreamStatus
 from awtube.observers.observer import Observer
 from awtube.aw_types import JointStates
-from collections import deque
+from awtube.logging import config
+import logging
 
 
 class TelemetryObserver(Observer):
@@ -14,9 +17,11 @@ class TelemetryObserver(Observer):
 
     def __init__(self) -> None:
         self.stream_status = None
+        # TODO: fix deque, maybe no need for memory
         self.state_memory_length = 1
         self.set_joint_states = deque(maxlen=self.state_memory_length)
         self.act_joint_states = deque(maxlen=self.state_memory_length)
+        self._logger = logging.getLogger(self.__class__.__name__)
 
     def update(self, message: str) -> None:
         """
@@ -38,7 +43,6 @@ class TelemetryObserver(Observer):
                 torques=[joint_i['t'] for joint_i in js['telemetry'][-1]['set']])
             # for el in js['telemetry'][-self.state_memory_length:]:
             #     # get set commands
-            #     print('here')
             #     self.set_joint_states.append(JointStates(
             #         positions=[all['p'] for all in el['set']],
             #         velocities=[all['v'] for all in el['set']],
@@ -56,7 +60,11 @@ class TelemetryObserver(Observer):
             # record timestamp
             self._timestamp = time.time()
 
-        except Exception as e:
+        except KeyError as ke:
+            # this means message doesn't contain telemetry
+            pass
+        except Exception:
+            self._logger.warn('No telemetry available.')
             # self._logger.error(e)
-            print(e)
+            # print(e)
             # print('Not recieving any telemetry!')

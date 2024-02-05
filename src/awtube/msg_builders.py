@@ -140,6 +140,32 @@ def get_machine_command(control_word: ControlWord, machine: int = 0) -> str:
     return json.dumps(s)
 
 
+def get_machine_target_command(target: MachineTarget, machine: int = 0) -> str:
+    s = {"command": {"machine": {f"{machine}": {
+        "target": int(target)}}}}
+    return json.dumps(s)
+
+
+# TODO: fix
+def get_kinematics_configuration_command(limits: bool, kc_config: int = 0) -> str:
+    s = {"command": {
+        "kinematicsConfiguration": {
+            f"{kc_config}": {
+                "command": {
+                    # Whether soft joint limits should be disabled
+                    "disableLimits": str(limits).lower(),
+                    # "doStop": "false",
+                    # Desired feed rate, with 1 being normal and zero being stopped. A value of 2 would give double normal speed, for example
+                    # "fro",
+                    # Optional logical rotation applied to all moves
+                    # "rotation",
+                    # Optional logical translation applied to all moves
+                    # "translation",
+                }
+            }}}}
+    return json.dumps(s)
+
+
 def get_machine_command_heartbeat(heartbeat: int, machine: int = 0) -> str:
     # s = MachineCommand(machine=machine,
     #                    control_word=control_word

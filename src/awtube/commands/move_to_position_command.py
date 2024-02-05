@@ -1,23 +1,20 @@
-import typing as tp
 from awtube.commands.command import Command
 from awtube.command_reciever import CommandReciever
-from awtube.command_builders import *
-from awtube.aw_types import *
-from awtube.gbc_types import *
+from awtube.msg_builders import get_stream_move_to_position
+from awtube.aw_types import Pose
 
 
-class MoveJoints(Command):
+class MoveToPositionCommand(Command):
     """
-        moveJoints command.
+        moveToPosition command.
     """
 
     def __init__(self,
                  receiver: CommandReciever,
-                 joint_positions: tp.List[float],
+                 pose: Pose,
                  tag: int = 0) -> None:
-        self.joints = JointStates(positions=joint_positions)
         self._receiver = receiver
-        self._payload = stream_move_joints_cmd(joints=self.joints, tag=tag)
+        self._payload = get_stream_move_to_position(pose=pose, tag=tag)
 
     def execute(self) -> None:
         """ Put command payload in reciever queue. """

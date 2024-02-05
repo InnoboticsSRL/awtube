@@ -2,7 +2,6 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Any
 
-
 class Observer(ABC):
     """
     The Observer interface declares the update coroutine, used by subjects.

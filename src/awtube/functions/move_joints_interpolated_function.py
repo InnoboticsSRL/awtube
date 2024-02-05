@@ -1,5 +1,5 @@
-from awtube.api.robot_function import RobotFunction
-from awtube.commands.move_joints_interpolated import MoveJointsInterpolated
+from awtube.functions.robot_function import RobotFunction
+from awtube.commands.move_joints_interpolated_command import MoveJointsInterpolatedCommand
 from awtube.commanders.stream_commander import StreamCommander
 from awtube.command_reciever import CommandReciever
 
@@ -17,7 +17,7 @@ class MoveJointsInterpolatedFunction(RobotFunction):
             tag (int, optional): tag(id) with which to send the command to the robot. Defaults to 0.
         """
         for pt in points:
-            cmd = MoveJointsInterpolated(
+            cmd = MoveJointsInterpolatedCommand(
                 receiver=self._reciever,
                 joint_positions=pt.positions,
                 joint_velocities=pt.velocities)

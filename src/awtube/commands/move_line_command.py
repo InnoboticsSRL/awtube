@@ -1,12 +1,12 @@
 import typing as tp
 from awtube.commands.command import Command
 from awtube.command_reciever import CommandReciever
-from awtube.command_builders import *
+from awtube.msg_builders import *
 from awtube.aw_types import *
 from awtube.gbc_types import *
 
 
-class MoveLine(Command):
+class MoveLineCommand(Command):
     """
         moveLine command.
     """

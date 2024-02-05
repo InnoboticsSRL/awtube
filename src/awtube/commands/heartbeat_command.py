@@ -1,6 +1,6 @@
 from awtube.commands.command import Command
 from awtube.command_reciever import CommandReciever
-from awtube.command_builders import get_machine_command_heartbeat
+from awtube.msg_builders import get_machine_command_heartbeat
 
 
 class HeartbeatCommad(Command):

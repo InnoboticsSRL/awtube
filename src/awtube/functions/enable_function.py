@@ -1,4 +1,4 @@
-from awtube.api.robot_function import RobotFunction
+from awtube.functions.robot_function import RobotFunction
 from awtube.commanders.machine_commander import MachineCommander
 from awtube.command_reciever import CommandReciever
 from awtube.commands.machine_state_command import MachineStateCommad
