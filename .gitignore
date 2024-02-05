@@ -1,7 +1,11 @@
 /src/awtube/__pycache__
+/src/awtube/commands/__pycache__
+/src/awtube/observers/__pycache__
+/src/awtube/commanders/__pycache__
 /src/awtube.egg-info
 src/tests/__pycache__
-/__pycache__
+**/__pycache__
+__pycache__
 /build
 /dist
 /env
