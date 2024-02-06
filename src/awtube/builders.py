@@ -2,7 +2,7 @@ import typing as tp
 from enum import IntEnum
 from pydantic import BaseModel, Field
 from abc import ABC, abstractmethod
-from awtube.errors.gbc_errors import OperationError
+from awtube.errors.gbc import OperationError
 
 
 class ActivityBuilder(BaseModel):

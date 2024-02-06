@@ -5,7 +5,7 @@
 import typing as tp
 from enum import IntEnum
 from pydantic import BaseModel, Field
-from awtube.errors.gbc_errors import OperationError
+from awtube.errors.gbc import OperationError
 from awtube.aw_types import Position
 
 
