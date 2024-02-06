@@ -1,6 +1,10 @@
+#!/usr/bin/env python3
+
+""" Defines the MoveJointsInterpolatedFunction. """
+
 from awtube.functions.robot_function import RobotFunction
-from awtube.commands.move_joints_interpolated_command import MoveJointsInterpolatedCommand
-from awtube.commanders.stream_commander import StreamCommander
+from awtube.commands.move_joints_interpolated import MoveJointsInterpolatedCommand
+from awtube.commanders.stream import StreamCommander
 from awtube.command_reciever import CommandReciever
 
 

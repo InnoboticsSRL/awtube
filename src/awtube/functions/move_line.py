@@ -1,9 +1,13 @@
+#!/usr/bin/env python3
+
+""" Defines the MoveLineFunction. """
+
 from awtube.functions.robot_function import RobotFunction
-from awtube.commands.move_joints_interpolated_command import MoveJointsInterpolatedCommand
-from awtube.commanders.stream_commander import StreamCommander
+from awtube.commands.move_joints_interpolated import MoveJointsInterpolatedCommand
+from awtube.commanders.stream import StreamCommander
 from awtube.command_reciever import CommandReciever
 import typing as tp
-from awtube.commands import move_line_command
+from awtube.commands import move_line
 
 
 class MoveLineFunction(RobotFunction):
@@ -22,7 +26,7 @@ class MoveLineFunction(RobotFunction):
             rotation (tp.Dict[str, float]): Dict of rotation, a quaternion: x, y, z, w
             tag (int, optional): tag(id) with which to send the command to the robot. Defaults to 0.
         """
-        cmd = move_line_command.MoveLineCommand(
+        cmd = move_line.MoveLineCommand(
             self._reciever, translation, rotation, tag)
         self._stream_commander.add_command(cmd)
         await self._stream_commander.execute_commands()

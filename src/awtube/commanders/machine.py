@@ -11,8 +11,8 @@ import logging
 from awtube.commanders.commander import Commander
 
 from awtube.commands.command import Command
-from awtube.commands.machine_state_command import MachineStateCommad
-from awtube.commands.heartbeat_command import HeartbeatCommad
+from awtube.commands.machine_state import MachineStateCommad
+from awtube.commands.heartbeat import HeartbeatCommad
 
 from awtube.observers.machine import MachineObserver
 

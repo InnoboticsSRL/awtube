@@ -1,4 +1,8 @@
-from abc import ABC, abstractmethod
+#!/usr/bin/env python3
+
+""" Defines RobotFunction Interface used to implement different functions fo the robot. """
+
+from abc import ABC
 
 
 class RobotFunction(ABC):

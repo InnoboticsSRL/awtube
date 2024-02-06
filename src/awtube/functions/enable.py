@@ -1,7 +1,11 @@
+#!/usr/bin/env python3
+
+""" Defines the EnableFunction. """
+
 from awtube.functions.robot_function import RobotFunction
-from awtube.commanders.machine_commander import MachineCommander
+from awtube.commanders.machine import MachineCommander
 from awtube.command_reciever import CommandReciever
-from awtube.commands.machine_state_command import MachineStateCommad
+from awtube.commands.machine_state import MachineStateCommad
 from awtube.cia402_machine import CIA402MachineState
 
 

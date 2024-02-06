@@ -12,8 +12,8 @@ from awtube.websocket_thread import WebsocketThread
 
 # Commands and Commanders
 from awtube.command_reciever import CommandReciever
-from awtube.commanders.stream_commander import StreamCommander
-from awtube.commanders.machine_commander import MachineCommander
+from awtube.commanders.stream import StreamCommander
+from awtube.commanders.machine import MachineCommander
 
 # Observers
 from awtube.observers.stream import StreamObserver
@@ -22,9 +22,9 @@ from awtube.observers.machine import MachineObserver
 from awtube.observers.kc import KinematicsConfigurationObserver
 
 # Robot functions
-from awtube.functions.move_joints_interpolated_function import MoveJointsInterpolatedFunction
-from awtube.functions.move_line_function import MoveLineFunction
-from awtube.functions.enable_function import EnableFunction
+from awtube.functions.move_joints_interpolated import MoveJointsInterpolatedFunction
+from awtube.functions.move_line import MoveLineFunction
+from awtube.functions.enable import EnableFunction
 from awtube.functions.move_to_position import MoveToPositioinFunction
 
 # logging
