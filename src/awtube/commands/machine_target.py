@@ -2,7 +2,7 @@
 
 """ MachineTarget command that implements Command Interface  """
 
-from awtube.gbc_types import MachineTarget
+from awtube.types.gbc import MachineTarget
 from awtube.msg_builders import get_machine_target_command
 
 from awtube.commands.command import Command

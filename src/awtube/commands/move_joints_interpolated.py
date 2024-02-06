@@ -6,7 +6,7 @@ import typing as tp
 from awtube.commands.command import Command
 from awtube.command_reciever import CommandReciever
 from awtube.msg_builders import stream_move_joints_interpolated_cmd
-from awtube.aw_types import JointStates
+from awtube.types.aw import JointStates
 
 
 class MoveJointsInterpolatedCommand(Command):

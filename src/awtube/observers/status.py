@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
 
-""" Defines the stream observer which implements Observer Interface. """
-
-from __future__ import annotations
-from abc import ABC, abstractmethod
+""" Defines the status observer which implements Observer Interface. """
+import logging
 import json
 import time
-from awtube.types.gbc import StreamStatus
+
+from awtube.types.gbc import Status
 from awtube.observers.observer import Observer
+
 from awtube.logging import config
-import logging
 
 
-class StreamObserver(Observer):
+
+class StatusObserver(Observer):
     """
-    Observes the 'stream' field  in the ws stream and keeps a StreamStatus object as payload
+    Observes the 'status' field  in the ws stream and keeps a Status object as payload
     """
 
     def __init__(self) -> None:
@@ -26,11 +26,11 @@ class StreamObserver(Observer):
         """
         try:
             js = json.loads(message)
-            # TODO: stream array id ??????
-            self._payload = StreamStatus(**js['stream'][0])
+            self._payload = Status(**js['status'])
+            self._logger.info(self._payload.kc[0].limits_disabled)
             self._timestamp = time.time()
         except KeyError as ke:
-            # this means message doesn't contain stream
+            # this means message doesn't contain status
             pass
         except Exception as e:
             self._logger.error(e)

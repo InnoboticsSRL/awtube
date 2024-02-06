@@ -6,8 +6,8 @@ import typing as tp
 from awtube.commands.command import Command
 from awtube.command_reciever import CommandReciever
 from awtube.msg_builders import *
-from awtube.aw_types import *
-from awtube.gbc_types import *
+from awtube.types.aw import *
+from awtube.types.gbc import *
 from enum import Enum
 from awtube.cia402_machine import CIA402MachineState
 

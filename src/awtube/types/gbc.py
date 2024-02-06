@@ -6,7 +6,7 @@ import typing as tp
 from enum import IntEnum
 from pydantic import BaseModel, Field
 from awtube.errors.gbc import OperationError
-from awtube.aw_types import Position
+from awtube.types.aw import Position
 
 
 class StreamState(IntEnum):
@@ -282,3 +282,19 @@ class MachineCommand(BaseModel):
 
 class Stream(BaseModel):
     stream: StreamConfig = Field(None)
+
+
+class Status(BaseModel):
+    """ Status of the machine given by GBC. """
+    # machine status
+    machine: MachineStatus = Field(None)
+    # kinematics configuration status
+    # kc: KinematicsConfigurationStatus = Field(None)
+    kc: tp.List[KinematicsConfigurationStatus]
+
+    # TODO:
+    # tasks
+    # activity
+    # joints
+    # din
+    # dout

@@ -5,10 +5,10 @@
 import typing as tp
 from awtube.functions.robot_function import RobotFunction
 from awtube.commands.move_to_position import MoveToPositionCommand
-from awtube.aw_types import Position, Quaternion
+from awtube.types.aw import Position, Quaternion
 from awtube.commanders.stream import StreamCommander
 from awtube.command_reciever import CommandReciever
-from awtube.aw_types import Pose
+from awtube.types.aw import Pose
 
 
 class MoveToPositioinFunction(RobotFunction):

@@ -1,7 +1,7 @@
 import pytest
 import json
-from awtube.aw_types import *
-from awtube.gbc_types import *
+from awtube.types.aw import *
+from awtube.types.gbc import *
 from awtube.commands import *
 
 """

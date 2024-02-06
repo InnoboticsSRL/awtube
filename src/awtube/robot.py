@@ -18,8 +18,7 @@ from awtube.commanders.machine import MachineCommander
 # Observers
 from awtube.observers.stream import StreamObserver
 from awtube.observers.telemetry import TelemetryObserver
-from awtube.observers.machine import MachineObserver
-from awtube.observers.kc import KinematicsConfigurationObserver
+from awtube.observers.status import StatusObserver
 
 # Robot functions
 from awtube.functions.move_joints_interpolated import MoveJointsInterpolatedFunction
@@ -64,20 +63,18 @@ class Robot(MoveJointsInterpolatedFunction,
         # Observers
         self.stream_observer = StreamObserver()
         self.telemetry_observer = TelemetryObserver()
-        self.machine_observer = MachineObserver()
-        self.kc_observer = KinematicsConfigurationObserver()
+        self.status_observer = StatusObserver()
 
         # Commanders
         self.stream_commander = StreamCommander(self.stream_observer)
-        self.machine_commander = MachineCommander(self.machine_observer)
+        self.machine_commander = MachineCommander(self.status_observer)
         # TODO: fix, all commanders should have the same interface
         self.machine_commander.reciever = self.receiver
 
         # Register observers
         self.receiver.attach_observer(self.stream_observer)
         self.receiver.attach_observer(self.telemetry_observer)
-        self.receiver.attach_observer(self.machine_observer)
-        self.receiver.attach_observer(self.kc_observer)
+        self.receiver.attach_observer(self.status_observer)
 
         # Define robot functions
         MoveJointsInterpolatedFunction.__init__(self,

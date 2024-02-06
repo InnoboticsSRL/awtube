@@ -2,7 +2,6 @@
 
 """ Defines the machine commander which implements Commander Interface. """
 
-from __future__ import annotations
 import time
 import asyncio
 from queue import Queue
@@ -14,12 +13,10 @@ from awtube.commands.command import Command
 from awtube.commands.machine_state import MachineStateCommad
 from awtube.commands.heartbeat import HeartbeatCommad
 
-from awtube.observers.machine import MachineObserver
-
+from awtube.observers.status import StatusObserver
 
 from awtube.command_reciever import CommandReciever
-from awtube.cia402_machine import (CIA402MachineState,
-                                   transition,
+from awtube.cia402_machine import (transition,
                                    device_state)
 from awtube.logging import config
 
@@ -30,20 +27,20 @@ class MachineCommander(Commander):
     It sends a command to the reciever.
     """
 
-    def __init__(self, machine_observer: MachineObserver,  heartbeat_freq: int = 1) -> None:
+    def __init__(self, status_observer: StatusObserver,  heartbeat_freq: int = 1) -> None:
         """
             Initialize MachineCommander: Sends commands related to the functioning of the machine.
             send_commands() is a loop which continuosly checks the queue for new commands and
             also maintains the heartbeat.
 
         Args:
-            machine_observer (MachineObserver):
+            status_observer (StatusObserver):
             heartbeat_freq (int, optional): The freq in Hz used to maintain the heartbeat. 
             Defaults to 1.
         """
         self._logger = logging.getLogger(self.__class__.__name__)
 
-        self._machine_observer: MachineObserver = machine_observer
+        self._status_observer: StatusObserver = status_observer
         self._command_queue: Queue[Command] = Queue()
         self._heartbeat_freq: int = heartbeat_freq
         self._last_cmd_timestamp = time.time()
@@ -74,7 +71,7 @@ class MachineCommander(Commander):
             await self.__internal_loop()
 
     async def __internal_loop(self) -> None:
-        if not self._machine_observer.payload:
+        if not self._status_observer.payload:
             # if observer not updated keep exiting here
             await asyncio.sleep(0.1)
             return
@@ -87,7 +84,7 @@ class MachineCommander(Commander):
         if (time.time() - self._last_cmd_timestamp) > (1/self._heartbeat_freq):
             cmd: HeartbeatCommad = HeartbeatCommad(
                 receiver=self._receiver,
-                heartbeat=self._machine_observer.payload.heartbeat)
+                heartbeat=self._status_observer.payload.machine.heartbeat)
             cmd.execute()
             self._last_cmd_timestamp = time.time()
             self._logger.debug('Sent heartbeat.')
@@ -107,7 +104,7 @@ class MachineCommander(Commander):
             await asyncio.sleep(0.1)
             # reset flags and return to accept new command from queue
             cia402_state = device_state(
-                self._machine_observer.payload.status_word)
+                self._status_observer.payload.machine.status_word)
             if cia402_state == self._current_cmd.desired_state:
                 self._logger.debug('New CIA402 state: %s.', cia402_state.value)
                 self._executing_cia402_command = False

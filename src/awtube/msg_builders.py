@@ -2,8 +2,8 @@
 
 """ Builder methods that give the messages to be sent to GBC. """
 
-from awtube.gbc_types import *
-from awtube.aw_types import *
+from awtube.types.gbc import *
+from awtube.types.aw import *
 import json
 
 

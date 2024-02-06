@@ -7,9 +7,9 @@ from collections import deque
 import json
 import time
 
-from awtube.gbc_types import StreamStatus
+from awtube.types.gbc import StreamStatus
 from awtube.observers.observer import Observer
-from awtube.aw_types import JointStates
+from awtube.types.aw import JointStates
 from awtube.logging import config
 import logging
 

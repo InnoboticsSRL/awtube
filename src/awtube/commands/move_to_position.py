@@ -5,7 +5,7 @@
 from awtube.commands.command import Command
 from awtube.command_reciever import CommandReciever
 from awtube.msg_builders import get_stream_move_to_position
-from awtube.aw_types import Pose
+from awtube.types.aw import Pose
 
 
 class MoveToPositionCommand(Command):

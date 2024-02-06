@@ -2,8 +2,8 @@ from __future__ import annotations
 import json
 import typing as tp
 from awtube.ws_thread import WebsocketThread
-from awtube.aw_types import *
-from awtube.gbc_types import *
+from awtube.types.aw import *
+from awtube.types.gbc import *
 from awtube.commands import *
 from awtube.exceptions import *
 from collections import deque

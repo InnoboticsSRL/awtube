@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 import asyncio
-from awtube.aw_types import *
-from awtube.gbc_types import *
+from awtube.types.aw import *
+from awtube.types.gbc import *
 from awtube.commands import *
 from awtube.exceptions import *
 # from awtube.awtube_node import AWTubeNode
