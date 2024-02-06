@@ -1,3 +1,7 @@
+#!/usr/bin/env python3
+
+""" MoveLine command that implements Command Interface  """
+
 import typing as tp
 from awtube.commands.command import Command
 from awtube.command_reciever import CommandReciever

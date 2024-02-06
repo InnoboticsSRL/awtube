@@ -1,4 +1,6 @@
-""" Defines the MachineCommander class"""
+#!/usr/bin/env python3
+
+""" Defines the machine commander which implements Commander Interface. """
 
 from __future__ import annotations
 import time

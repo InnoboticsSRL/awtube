@@ -1,3 +1,7 @@
+#!/usr/bin/env python3
+
+""" Command Interface used to implement command pattern.  """
+
 from __future__ import annotations
 from abc import ABC, abstractmethod
 

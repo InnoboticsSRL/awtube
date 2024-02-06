@@ -1,3 +1,9 @@
+#!/usr/bin/env python3
+
+"""
+    Contains the config dict for the the loggers.
+"""
+
 import logging.config
 from pythonjsonlogger import jsonlogger
 
@@ -7,7 +13,8 @@ LOGGING = {
     "formatters": {
         "json": {
             # "format": "%(asctime)s %(levelname)s %(message)s",
-            "format": "[%(name)s %(clientip)-15s %(levelname)s %(message)s]",
+            # "format": "[%(name)s %(clientip)-15s %(levelname)s %(message)s]",
+            "format": "%(name)s %(levelname)s %(message)s",
             "class": "pythonjsonlogger.jsonlogger.JsonFormatter",
         }
     },
@@ -18,7 +25,7 @@ LOGGING = {
             "formatter": "json",
         }
     },
-    "loggers": {"": {"handlers": ["stdout"], "level": "DEBUG"}},
+    "loggers": {"": {"handlers": ["stdout"], "level": "ERROR"}},
 }
 
 

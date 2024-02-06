@@ -1,4 +1,6 @@
-""" Defines the StreamCommander class"""
+#!/usr/bin/env python3
+
+""" Defines the Stream commander which implements Commander Interface. """
 
 from __future__ import annotations
 import asyncio

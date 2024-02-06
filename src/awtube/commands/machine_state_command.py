@@ -1,3 +1,7 @@
+#!/usr/bin/env python3
+
+""" MachineState command that implements Command Interface  """
+
 import typing as tp
 from awtube.commands.command import Command
 from awtube.command_reciever import CommandReciever
@@ -49,4 +53,4 @@ class MachineStateCommad(Command):
     def execute(self) -> None:
         """ Put command payload in reciever queue. """
         self._receiver.put(get_machine_command(self._control_word,
-                                            machine=self._machine))
+                                               machine=self._machine))

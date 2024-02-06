@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+
+""" Defines Exceptions of the system. """
 
 class HeartbeatFailure(Exception):
     """ Raised when heartbeat is not recieved in predefined time slot. """

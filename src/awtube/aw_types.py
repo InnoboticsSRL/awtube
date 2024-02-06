@@ -1,3 +1,7 @@
+#!/usr/bin/env python3
+
+""" Contains types inherent to AW. """
+
 import typing as tp
 from enum import Enum
 from pydantic import BaseModel, Field

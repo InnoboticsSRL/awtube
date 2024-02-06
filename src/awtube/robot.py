@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
 """
-    Defines class which puts everything together, commanders, observers and robot functions.
+    Class which puts everything together, commanders, observers and robot functions.
+    This class defines the API of the robot, the user interfaces with this class.
 """
 
 from __future__ import annotations
@@ -43,13 +44,14 @@ class Robot(MoveJointsInterpolatedFunction,
                  port: str = "9001",
                  config_path: str = None,
                  name: str = "AWTube",
-                 log_level: int | str = logging.DEBUG,
+                 log_level: int | str = logging.INFO,
                  logger: logging.Logger | None = None):
         self._name = name
         self._robot_ip = robot_ip
         self._port = port
 
         # logging
+        # to do fix logging level
         self._log_level = log_level
         self._logger = logging.getLogger(
             self.__class__.__name__) if logger is None else logger

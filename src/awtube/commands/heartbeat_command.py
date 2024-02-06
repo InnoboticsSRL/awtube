@@ -1,3 +1,8 @@
+
+#!/usr/bin/env python3
+
+""" Heartbeat command that implements Command Interface  """
+
 from awtube.commands.command import Command
 from awtube.command_reciever import CommandReciever
 from awtube.msg_builders import get_machine_command_heartbeat

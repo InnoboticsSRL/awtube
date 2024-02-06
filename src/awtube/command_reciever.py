@@ -1,4 +1,7 @@
-from __future__ import annotations
+#!/usr/bin/env python3
+
+""" Defines the CommandReciever Interface used to implement the command pattern. """
+
 from abc import ABC, abstractmethod
 
 

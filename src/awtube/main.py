@@ -1,5 +1,7 @@
 # !/usr/bin/env python
 
+""" Example File used to show the use of the API """
+
 from awtube.awtube import AWTube
 import logging
 

@@ -1,4 +1,7 @@
-from __future__ import annotations
+#!/usr/bin/env python3
+
+""" Interface used to implement the commander pattern. """
+
 from abc import ABC, abstractmethod
 from awtube.commands.command import Command
 

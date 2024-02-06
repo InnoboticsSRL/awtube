@@ -1,3 +1,7 @@
+#!/usr/bin/env python3
+
+""" Defines the kinematics configuration observer which implements Observer Interface. """
+
 import json
 import time
 import logging

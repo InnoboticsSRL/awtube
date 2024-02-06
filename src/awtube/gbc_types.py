@@ -1,3 +1,7 @@
+#!/usr/bin/env python3
+
+""" Contains types inherent to GBC. """
+
 import typing as tp
 from enum import IntEnum
 from pydantic import BaseModel, Field

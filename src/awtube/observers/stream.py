@@ -1,3 +1,7 @@
+#!/usr/bin/env python3
+
+""" Defines the stream observer which implements Observer Interface. """
+
 from __future__ import annotations
 from abc import ABC, abstractmethod
 import json

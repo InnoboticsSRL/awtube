@@ -1,3 +1,7 @@
+#!/usr/bin/env python3
+
+""" Builder methods that give the messages to be sent to GBC. """
+
 from awtube.gbc_types import *
 from awtube.aw_types import *
 import json

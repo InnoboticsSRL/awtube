@@ -1,3 +1,7 @@
+#!/usr/bin/env python3
+
+""" Defines the telemetry observer which implements Observer Interface. """
+
 from __future__ import annotations
 from collections import deque
 import json

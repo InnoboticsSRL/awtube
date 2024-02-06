@@ -1,11 +1,10 @@
+#!/usr/bin/env python3
+
 """
-    WebsocketThread client abstract class
+    WebsocketThread client class which implements the CommandReciever Interface.
 
     Can be used to create a asynchronous websocket client in a separate thread.
-    Once implemented, the thread can handle received messages and allows
-    for sending of messages from synchronous Python code.
-
-    See the WebsocketThread docstring for an example implementation and use.
+    The thread sends commands and updates the subscriber Observers asynchronously.
 """
 import websockets
 import asyncio
@@ -19,15 +18,12 @@ from awtube.command_reciever import CommandReciever
 from awtube.observers.observer import Observer
 
 # disable websockets logging
+# TODO: improve, don't just disable
 logging.getLogger("websockets.client").addHandler(logging.NullHandler())
 logging.getLogger("websockets.client").propagate = False
 
-
 class WebsocketThread(threading.Thread, CommandReciever):
     """ Client for communicating on websockets
-
-        To implement this class, override the handle_message method, which
-        receives string messages from the websocket.
     """
 
     def __init__(self, url: str, headers: Dict[str, str] = None, freq: int = 100):

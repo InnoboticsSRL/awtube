@@ -1,3 +1,7 @@
+#!/usr/bin/env python3
+
+""" MoveToPosition command that implements Command Interface  """
+
 from awtube.commands.command import Command
 from awtube.command_reciever import CommandReciever
 from awtube.msg_builders import get_stream_move_to_position

@@ -1,9 +1,10 @@
-from enum import Enum
+#!/usr/bin/env python3
 
-# The code in this file looks at the cia402 state given in messages from GBC
-# and the desired state wanted by python API and determines what state command
-# should next be sent in order to transition the state machine towards the desired state.
-# The state of the machine as reported by GBC, using the CiA 402 state machine.
+"""
+    Utils to work with the CIA402 state machine.
+"""
+
+from enum import Enum
 
 
 class CIA402MachineState(Enum):

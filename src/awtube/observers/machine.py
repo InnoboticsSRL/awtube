@@ -1,12 +1,16 @@
-from __future__ import annotations
-from abc import ABC, abstractmethod
+#!/usr/bin/env python3
+
+""" Defines the machine observer which implements Observer Interface. """
+
+import logging
 import json
 import time
+
 from awtube.gbc_types import MachineStatus
 from awtube.observers.observer import Observer
-from awtube.cia402_machine import CIA402MachineState, device_state
+from awtube.cia402_machine import device_state
+
 from awtube.logging import config
-import logging
 
 
 class MachineObserver(Observer):
