@@ -1,7 +1,13 @@
+#!/usr/bin/env python3
+
+""" Defines Errors and Exceptions on the controls (GBC) side. """
+
+from __future__ import annotations
 from enum import IntEnum
 
 
 class OperationError(IntEnum):
+    """ Types of OperationError defined by GBC. """
     NONE = 0
     HLC_HEARTBEAT_LOST = 1
     OPERATION_NOT_ENABLED = 2
@@ -17,3 +23,36 @@ class OperationError(IntEnum):
     CONFIG_RELOADED = 12
     KINEMATICS_ENVELOPE_VIOLATION = 13
     KINEMATICS_NEAR_SINGULARITY = 14
+
+
+# class OperationErrorException(Exception):
+#     """ Raised when there's and operation error signaled by GBC. """
+#     __type = OperationError.NONE
+
+#     @property
+#     def type(self) -> OperationError:
+#         """ Return OperationError type """
+#         return self.__type
+
+#     def __init__(self, operation_error_type: int = 0) -> None:
+#         self.__type = OperationError(operation_error_type)
+#         self.__message = self.__type.name
+#         super().__init__(self, self.__message)
+
+
+class HeartbeatFailure(Exception):
+    """ Raised when heartbeat is not sent in predefined time slot. """
+    pass
+
+    # def __init__(self, message="Heartbeat missed!") -> None:
+    #     self.message = message
+    #     super().__init__(self.message)
+
+
+class TelemetryLoss(Exception):
+    """ Raised when telemetry is not recieved in predefined time slot. """
+    pass
+
+    # def __init__(self, message="Heartbeat missed!") -> None:
+    #     self.message = message
+    #     super().__init__(self.message)

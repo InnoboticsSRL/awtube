@@ -4,7 +4,7 @@
 
 import typing as tp
 from awtube.commands.command import Command
-from awtube.command_reciever import CommandReciever
+from awtube.command_receiver import CommandReceiver
 from awtube.msg_builders import *
 from awtube.types.aw import *
 from awtube.types.gbc import *
@@ -18,7 +18,7 @@ class MachineStateCommad(Command):
     """
 
     def __init__(self,
-                 receiver: CommandReciever,
+                 receiver: CommandReceiver,
                  desired_state: CIA402MachineState,
                  machine: int = 0) -> None:
         self._desired_state = desired_state
@@ -51,6 +51,6 @@ class MachineStateCommad(Command):
         return self.machine
 
     def execute(self) -> None:
-        """ Put command payload in reciever queue. """
+        """ Put command payload in receiver queue. """
         self._receiver.put(get_machine_command(self._control_word,
                                                machine=self._machine))

@@ -11,7 +11,7 @@ class Command(ABC):
     The Command interface declares a coroutine for executing a command.
     """
     tag = 0
-    reciever = None
+    receiver = None
 
     @abstractmethod
     def execute(self) -> None:

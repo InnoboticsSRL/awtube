@@ -5,7 +5,7 @@ from awtube.ws_thread import WebsocketThread
 from awtube.types.aw import *
 from awtube.types.gbc import *
 from awtube.commands import *
-from awtube.exceptions import *
+from awtube.errors.exceptions import *
 from collections import deque
 import logging as lg
 import time

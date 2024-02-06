@@ -4,7 +4,7 @@
 
 import typing as tp
 from awtube.commands.command import Command
-from awtube.command_reciever import CommandReciever
+from awtube.command_receiver import CommandReceiver
 from awtube.msg_builders import *
 from awtube.types.aw import *
 from awtube.types.gbc import *
@@ -16,7 +16,7 @@ class MoveLineCommand(Command):
     """
 
     def __init__(self,
-                 receiver: CommandReciever,
+                 receiver: CommandReceiver,
                  translation: tp.Dict[str, float],
                  rotation: tp.Dict[str, float],
                  tag: int = 0) -> None:
@@ -26,5 +26,5 @@ class MoveLineCommand(Command):
         self._payload = stream_move_line_cmd(pose, tag=tag)
 
     def execute(self) -> None:
-        """ Put command payload in reciever queue. """
+        """ Put command payload in receiver queue. """
         self._receiver.put(self._payload)

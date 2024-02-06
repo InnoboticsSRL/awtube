@@ -72,6 +72,12 @@ class ControlWord(IntEnum):
     FAULTRESET128 = 128
 
 
+class MachineTarget(IntEnum):
+    NONE = 0
+    FIELDBUS = 1
+    SIMULATION = 2
+
+
 class MachineStatus(BaseModel):
     # Indicates an operation error in GBC that is recoverable
     operation_error: OperationError = Field(0, alias='operationError')
@@ -87,7 +93,7 @@ class MachineStatus(BaseModel):
     # CiA 402 control word for the machine as a whole
     control_word: int = Field(None, alias='controlWord')
     # What the current target of the machine is - e.g. is it is simulation mode
-    target: int = Field(None)
+    target: MachineTarget = Field(MachineTarget.NONE)
     # Number of times we have tried to connect to the target
     target_connect_retry_cnt: int = Field(None, alias='targetConnectRetryCnt')
 
@@ -96,15 +102,15 @@ class KinematicsConfigurationStatus(BaseModel):
     # Indicates if soft limits (machine extents) are disabled
     limits_disabled: bool = Field(False, alias='limitsDisabled')
     # Feed rate target value
-    fro_target: int = Field(0, alias='froTarget')
+    fro_target: float = Field(0, alias='froTarget')
     # Feed rate actual value
-    fro_actual: int = Field(0, alias='froActual')
+    fro_actual: float = Field(0, alias='froActual')
     # Configuration (for example, shoulder/elbow/wrist) of the kinematics configuration
     configuration: int = Field(0, alias='configuration')
     # Current tool index
     tool_index: int = Field(0, alias='toolIndex')
     # Word containing the fault history (faults that were active when the machine entered the fault state)
-    is_near_singularity: bool = Field(False, alias='isNearSingularity')
+    is_near_singularity: int = Field(0, alias='isNearSingularity')
     # Position
     # position: Position = Field(None)
     # Offset
@@ -207,12 +213,6 @@ class PositionReference(IntEnum):
     ABSOLUTE = 0
     RELATIVE = 1
     MOVESUPERIMPOSED = 2
-
-
-class MachineTarget(IntEnum):
-    NONE = 0
-    FIELDBUS = 1
-    SIMULATION = 2
 
 
 class CartesianPosition(BaseModel):

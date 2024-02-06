@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 
-""" Defines the CommandReciever Interface used to implement the command pattern. """
+""" Defines the CommandReceiver Interface used to implement the command pattern. """
 
 from abc import ABC, abstractmethod
 
 
-class CommandReciever(ABC):
+class CommandReceiver(ABC):
     """
     The Receiver classes contain some important business logic. They know how to
     perform all kinds of operations, associated with carrying out a request. In

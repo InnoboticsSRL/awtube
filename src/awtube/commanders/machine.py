@@ -12,26 +12,34 @@ from awtube.commanders.commander import Commander
 from awtube.commands.command import Command
 from awtube.commands.machine_state import MachineStateCommad
 from awtube.commands.heartbeat import HeartbeatCommad
+from awtube.commands.kc_config import KinematicsConfigurationCommad
+from awtube.commands.machine_target import MachineTargetCommad
 
 from awtube.observers.status import StatusObserver
 
-from awtube.command_reciever import CommandReciever
+from awtube.command_receiver import CommandReceiver
+from awtube.types.gbc import MachineTarget
+
 from awtube.cia402_machine import (transition,
                                    device_state)
 from awtube.logging import config
+
+# errors
+from awtube.errors.awtube import AwtubeError, AWTubeErrorException
 
 
 class MachineCommander(Commander):
     """
     The MachineCommander is associated with one or several commands. 
-    It sends a command to the reciever.
+    It sends a command to the receiver.
     """
 
     def __init__(self, status_observer: StatusObserver,  heartbeat_freq: int = 1) -> None:
         """
             Initialize MachineCommander: Sends commands related to the functioning of the machine.
-            send_commands() is a loop which continuosly checks the queue for new commands and
-            also maintains the heartbeat.
+            send_commands() is a loop which continuosly checks the queue for new commands and sends
+            them. Also maintains the heartbeat and checks the operation state of the machine, velocity
+            , physical limits and target(simulation or real) machine.
 
         Args:
             status_observer (StatusObserver):
@@ -44,7 +52,6 @@ class MachineCommander(Commander):
         self._command_queue: Queue[Command] = Queue()
         self._heartbeat_freq: int = heartbeat_freq
         self._last_cmd_timestamp = time.time()
-        self._connected = False
         self._receiver = None
 
         # attributes concerning the state machine
@@ -52,35 +59,69 @@ class MachineCommander(Commander):
         self._executing_cia402_command = False
         self._current_cw = 128
 
+        # robot limits
+        self._limits_disabled = False
+        self._target_feed_rate = 1
+        self._target = MachineTarget.SIMULATION
+
+    # receiver property
     @property
-    def reciever(self) -> CommandReciever:
+    def receiver(self) -> CommandReceiver:
         return self._receiver
 
-    @reciever.setter
-    def reciever(self, value) -> None:
+    @receiver.setter
+    def receiver(self, value) -> None:
         self._receiver = value
 
+    # limits_disabled property
+    @property
+    def limits_disabled(self) -> bool:
+        """ Get limits disabled flag. """
+        return self._limits_disabled
+
+    @limits_disabled.setter
+    def limits_disabled(self, value: bool) -> None:
+        """ Set limits disabled flag. """
+        if not isinstance(value, bool):
+            raise AWTubeErrorException(
+                AwtubeError.BAD_ARGUMENT, 'Limits disabled flag should be a bool type.')
+        self._limits_disabled = value
+
+    # velocity property
+    @property
+    def velocity(self) -> bool:
+        """ Get physical limits flag. """
+        return self._target_feed_rate
+
+    @velocity.setter
+    def velocity(self, value: (float, int)) -> None:
+        """ Set physical limits flag. Takes values from 0.0 to 2.2"""
+        if not isinstance(value, (float, int)):
+            raise AWTubeErrorException(
+                AwtubeError.BAD_ARGUMENT, 'Velocity limits should be a float or int type.')
+        self._target_feed_rate = value
+
+    @property
+    def target(self) -> MachineTarget:
+        """ Get physical limits flag. """
+        return self._target
+
+    # target property
+    @target.setter
+    def target(self, value: (float, int, MachineTarget)) -> None:
+        """ Set physical limits flag. Takes values from 0.0 to 2.2"""
+        if not isinstance(value, (float, int, MachineTarget)):
+            raise AWTubeErrorException(
+                AwtubeError.BAD_ARGUMENT, 'Velocity limits should be a float, int or MachineTarget type.')
+        self._target = MachineTarget(value)
+
     def add_command(self, command: Command) -> None:
-        """ Add commands to be sent and update the reciever 
+        """ Add commands to be sent and update the receiver 
             to which we'll send the heartbeat command"""
         self._command_queue.put(command)
 
-    async def execute_commands(self, wait_done: bool = False) -> None:
-        self._logger.debug('Started executing commands.')
-        while True:
-            await self.__internal_loop()
-
-    async def __internal_loop(self) -> None:
-        if not self._status_observer.payload:
-            # if observer not updated keep exiting here
-            await asyncio.sleep(0.1)
-            return
-
-        if not self._receiver:
-            print('No reciever!')
-            return
-
-        # resend last hearbeat back
+    async def __resend_heartbeat(self) -> None:
+        """ Resend last hearbeat back """
         if (time.time() - self._last_cmd_timestamp) > (1/self._heartbeat_freq):
             cmd: HeartbeatCommad = HeartbeatCommad(
                 receiver=self._receiver,
@@ -90,7 +131,8 @@ class MachineCommander(Commander):
             self._logger.debug('Sent heartbeat.')
             await asyncio.sleep(0.2)
 
-        # dequeue only once TODO change
+    async def __get_command(self) -> None:
+        """ Get next command from queue if not already executing one. """
         if not self._command_queue.empty() and not self._executing_cia402_command:
             # get new command to process
             self._current_cmd: MachineStateCommad = self._command_queue.get(
@@ -99,7 +141,8 @@ class MachineCommander(Commander):
             self._logger.debug('Got new command from queue.')
             return
 
-        # if there is a command pending
+    async def __execute_next_step(self) -> None:
+        """ Execute next step to take the state machine at the desired state. """
         if self._executing_cia402_command:
             await asyncio.sleep(0.1)
             # reset flags and return to accept new command from queue
@@ -119,5 +162,56 @@ class MachineCommander(Commander):
             self._current_cw = next_cw
             self._current_cmd.execute()
             return
+
+    async def __ensure_target_velocity_and_limits(self) -> None:
+        """ Ensure velocity and limits have the sames value as those set here. """
+
+        if self._status_observer.payload.kc[0].limits_disabled != self._limits_disabled:
+            self._logger.debug('Resetting limits_disabled.')
+            cmd = KinematicsConfigurationCommad(self._receiver)
+            cmd.disable_limits = self._limits_disabled
+            cmd.execute()
+
+        if self._status_observer.payload.kc[0].fro_target != self._target_feed_rate:
+            self._logger.debug('Resetting target velocity.')
+            cmd = KinematicsConfigurationCommad(self._receiver)
+            cmd.target_feed_rate = self._target_feed_rate
+            cmd.execute()
+        # check again after approximately 1 sec
+        await asyncio.sleep(1.0)
+
+    async def __ensure_target(self) -> None:
+        """ Ensure target has the same value as set here. """
+        if self._status_observer.payload.machine.target != self._target:
+            self._logger.debug('Resetting target.')
+            cmd = MachineTargetCommad(self.receiver, target=self._target)
+            cmd.execute()
+        # check again after approximately 1 sec
+        await asyncio.sleep(1.0)
+
+    async def execute_commands(self, wait_done: bool = False) -> None:
+        self._logger.debug('Started executing commands.')
+        while True:
+            await self.__internal_loop()
+
+    async def __internal_loop(self) -> None:
+        if not self._status_observer.payload:
+            # if observer not updated keep exiting here
+            await asyncio.sleep(0.1)
+            return
+
+        if not self._receiver:
+            print('No receiver!')
+            return
+
+        await self.__resend_heartbeat()
+
+        await self.__get_command()
+
+        await self.__execute_next_step()
+
+        await self.__ensure_target_velocity_and_limits()
+
+        await self.__ensure_target()
 
         await asyncio.sleep(0.01)

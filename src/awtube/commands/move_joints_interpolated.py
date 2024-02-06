@@ -4,7 +4,7 @@
 
 import typing as tp
 from awtube.commands.command import Command
-from awtube.command_reciever import CommandReciever
+from awtube.command_receiver import CommandReceiver
 from awtube.msg_builders import stream_move_joints_interpolated_cmd
 from awtube.types.aw import JointStates
 
@@ -14,7 +14,7 @@ class MoveJointsInterpolatedCommand(Command):
         moveJointsInterpolated command.
     """
     def __init__(self,
-                 receiver: CommandReciever,
+                 receiver: CommandReceiver,
                  joint_positions: tp.List[float],
                  joint_velocities: tp.List[float]) -> None:
         joints = JointStates(positions=joint_positions,
@@ -23,5 +23,5 @@ class MoveJointsInterpolatedCommand(Command):
         self._payload = stream_move_joints_interpolated_cmd(joints)
 
     def execute(self) -> None:
-        """ Put command payload in reciever queue. """
+        """ Put command payload in receiver queue. """
         self._receiver.put(self._payload)

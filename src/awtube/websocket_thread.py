@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-    WebsocketThread client class which implements the CommandReciever Interface.
+    WebsocketThread client class which implements the CommandReceiver Interface.
 
     Can be used to create a asynchronous websocket client in a separate thread.
     The thread sends commands and updates the subscriber Observers asynchronously.
@@ -14,15 +14,18 @@ import logging
 # import sys
 import threading
 from typing import Dict
-from awtube.command_reciever import CommandReciever
+
+from awtube.command_receiver import CommandReceiver
 from awtube.observers.observer import Observer
+
+from awtube.logging import config
 
 # disable websockets logging
 # TODO: improve, don't just disable
-logging.getLogger("websockets.client").addHandler(logging.NullHandler())
 logging.getLogger("websockets.client").propagate = False
 
-class WebsocketThread(threading.Thread, CommandReciever):
+
+class WebsocketThread(threading.Thread, CommandReceiver):
     """ Client for communicating on websockets
     """
 
@@ -33,6 +36,8 @@ class WebsocketThread(threading.Thread, CommandReciever):
             headers: Any additional headers to supply to the websocket.
         """
         super().__init__()
+        self._logger = logging.getLogger(self.__class__.__name__)
+
         self.url = url
         self.headers = headers if headers else dict()
 
@@ -60,17 +65,12 @@ class WebsocketThread(threading.Thread, CommandReciever):
         """ Notify all attached observers. """
         if not self._observers:
             return
-        for sub in self._observers:
-            sub.update(msg)
-
-    # @abstractmethod
-    # async def handle_message(self, message: str):
-    #     """ Override this method to handle messages from the websocket
-
-    #     Args:
-    #         message: String from the websocket.
-    #     """
-    #     raise NotImplementedError
+        # raise exceptions of observers here
+        try:
+            for sub in self._observers:
+                sub.update(msg)
+        except Exception as e:
+            raise e
 
     # def __enter__(self):
     #     """ Context manager for running the websocket """
@@ -102,23 +102,16 @@ class WebsocketThread(threading.Thread, CommandReciever):
         await asyncio.gather(*tasks, return_exceptions=True)
         self.loop.stop()
 
-    def run(self):
-        """ Main execution of the thread. Is called when entering context """
-        self.loop = asyncio.new_event_loop()
-        # self.ignore_aiohttp_ssl_error()
-        asyncio.set_event_loop(self.loop)
-        self.loop.create_task(self.listen())
-        self.loop.run_forever()
-
     async def listen(self):
         """ Listen to the websocket and local outgoing queue """
         try:
             async with websockets.connect(self.url, extra_headers=self.headers) as socket:
                 # gather all tasks defined in self._tasks
+                # await asyncio.gather(*(task(socket) for task in self._tasks), return_exceptions=True)
                 await asyncio.gather(*(task(socket) for task in self._tasks))
         except ConnectionRefusedError:
             # self.logger
-            print('Connection refused!')
+            self._logger.error('Connection refused!')
 
     async def listen_socket(self, socket):
         """ Listen for messages on the socket, schedule tasks to handle """
@@ -138,9 +131,16 @@ class WebsocketThread(threading.Thread, CommandReciever):
                     continue
 
     def put(self, message: str) -> None:
-        """ Put message in the recievers queue. """
+        """ Put message in the receivers queue. """
         self.outgoing.put(message)
-        # print(message)
+
+       # def run(self):
+    #     """ Main execution of the thread. Is called when entering context """
+    #     self.loop = asyncio.new_event_loop()
+    #     # self.ignore_aiohttp_ssl_error()
+    #     asyncio.set_event_loop(self.loop)
+    #     self.loop.create_task(self.listen())
+    #     self.loop.run_forever()
 
     # def ignore_aiohttp_ssl_error(self):
     #     """ Ignore aiohttp #3535 / cpython #13548 issue with SSL close. """

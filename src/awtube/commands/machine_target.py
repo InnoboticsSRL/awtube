@@ -6,7 +6,7 @@ from awtube.types.gbc import MachineTarget
 from awtube.msg_builders import get_machine_target_command
 
 from awtube.commands.command import Command
-from awtube.command_reciever import CommandReciever
+from awtube.command_receiver import CommandReceiver
 
 
 class MachineTargetCommad(Command):
@@ -15,10 +15,10 @@ class MachineTargetCommad(Command):
     """
 
     def __init__(self,
-                 reciever: CommandReciever,
+                 receiver: CommandReceiver,
                  target: MachineTarget,
                  machine: int = 0) -> None:
-        self._receiver = reciever
+        self._receiver = receiver
         self._machine = machine
         self._target = target
 
@@ -32,6 +32,6 @@ class MachineTargetCommad(Command):
         self._target = cw
 
     def execute(self) -> None:
-        """ Put command payload in reciever queue. """
+        """ Put command payload in receiver queue. """
         self._receiver.put(get_machine_target_command(self._target,
                                                       machine=self._machine))

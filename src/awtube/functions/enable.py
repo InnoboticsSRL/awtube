@@ -4,7 +4,7 @@
 
 from awtube.functions.robot_function import RobotFunction
 from awtube.commanders.machine import MachineCommander
-from awtube.command_reciever import CommandReciever
+from awtube.command_receiver import CommandReceiver
 from awtube.commands.machine_state import MachineStateCommad
 from awtube.cia402_machine import CIA402MachineState
 
@@ -12,9 +12,9 @@ from awtube.cia402_machine import CIA402MachineState
 class EnableFunction(RobotFunction):
     """ Enable connection with GBC. """
 
-    def __init__(self, machine_commander: MachineCommander, reciever: CommandReciever) -> None:
+    def __init__(self, machine_commander: MachineCommander, receiver: CommandReceiver) -> None:
         self._machine_commander = machine_commander
-        self._reciever = reciever
+        self._receiver = receiver
 
     # not yet ready, because currently is reset is reduntant
     # def reset(self) -> None:
@@ -25,6 +25,6 @@ class EnableFunction(RobotFunction):
 
     def enable(self) -> None:
         """ Enable connection with GBC, commanding to go to OPERATION_ENABLED state. """
-        cmd = MachineStateCommad(self._reciever,
+        cmd = MachineStateCommad(self._receiver,
                                  desired_state=CIA402MachineState.OPERATION_ENABLED)
         self._machine_commander.add_command(cmd)

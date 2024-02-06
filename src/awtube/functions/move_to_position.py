@@ -7,22 +7,22 @@ from awtube.functions.robot_function import RobotFunction
 from awtube.commands.move_to_position import MoveToPositionCommand
 from awtube.types.aw import Position, Quaternion
 from awtube.commanders.stream import StreamCommander
-from awtube.command_reciever import CommandReciever
+from awtube.command_receiver import CommandReceiver
 from awtube.types.aw import Pose
 
 
 class MoveToPositioinFunction(RobotFunction):
     """ Send moveToPosition command. """
 
-    def __init__(self, stream_commander: StreamCommander, reciever: CommandReciever) -> None:
+    def __init__(self, stream_commander: StreamCommander, receiver: CommandReceiver) -> None:
         self._stream_commander = stream_commander
-        self._reciever = reciever
+        self._receiver = receiver
 
     async def move_to_position(self,
                                translation: tp.Dict[str, float],
                                rotation: tp.Dict[str, float],
                                tag: int = 0) -> None:
-        """ Send a moveLine command to a CommandReciever.
+        """ Send a moveLine command to a CommandReceiver.
 
         Args:
             translation (tp.Dict[str, float]): dict of translation x, y, z
@@ -31,6 +31,6 @@ class MoveToPositioinFunction(RobotFunction):
         """
         pose = Pose(position=Position(**translation),
                     orientation=Quaternion(**rotation))
-        cmd = MoveToPositionCommand(self._reciever, pose, tag)
+        cmd = MoveToPositionCommand(self._receiver, pose, tag)
         self._stream_commander.add_command(cmd)
         await self._stream_commander.execute_commands()

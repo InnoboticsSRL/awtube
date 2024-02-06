@@ -11,7 +11,7 @@ import logging
 from awtube.websocket_thread import WebsocketThread
 
 # Commands and Commanders
-from awtube.command_reciever import CommandReciever
+from awtube.command_receiver import CommandReceiver
 from awtube.commanders.stream import StreamCommander
 from awtube.commanders.machine import MachineCommander
 
@@ -27,7 +27,7 @@ from awtube.functions.enable import EnableFunction
 from awtube.functions.move_to_position import MoveToPositioinFunction
 
 # logging
-from awtube.logging import config
+from awtube.logging import config 
 
 
 class Robot(MoveJointsInterpolatedFunction,
@@ -45,6 +45,7 @@ class Robot(MoveJointsInterpolatedFunction,
                  name: str = "AWTube",
                  log_level: int | str = logging.INFO,
                  logger: logging.Logger | None = None):
+
         self._name = name
         self._robot_ip = robot_ip
         self._port = port
@@ -56,8 +57,8 @@ class Robot(MoveJointsInterpolatedFunction,
             self.__class__.__name__) if logger is None else logger
         self._logger.setLevel(self._log_level)
 
-        # Command reciever
-        self.receiver: CommandReciever = WebsocketThread(
+        # Command receiver
+        self.receiver: CommandReceiver = WebsocketThread(
             f"ws://{self._robot_ip}:{self._port}/ws")
 
         # Observers
@@ -69,7 +70,7 @@ class Robot(MoveJointsInterpolatedFunction,
         self.stream_commander = StreamCommander(self.stream_observer)
         self.machine_commander = MachineCommander(self.status_observer)
         # TODO: fix, all commanders should have the same interface
-        self.machine_commander.reciever = self.receiver
+        self.machine_commander.receiver = self.receiver
 
         # Register observers
         self.receiver.attach_observer(self.stream_observer)
@@ -89,8 +90,14 @@ class Robot(MoveJointsInterpolatedFunction,
         EnableFunction.__init__(self,
                                 self.machine_commander,
                                 self.receiver)
+        
+        # test
+        self.machine_commander.limits_disabled = True
+        self.machine_commander.velocity = 1.75
+        self.machine_commander.target = 2
 
     async def startup(self) -> None:
         """ Start the whole process of listening and commanding. """
+
         await asyncio.gather(self.receiver.listen(),
                              self.machine_commander.execute_commands())
