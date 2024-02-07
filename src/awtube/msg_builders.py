@@ -146,7 +146,8 @@ def get_machine_command(control_word: ControlWord, machine: int = 0) -> str:
 
 def get_machine_target_command(target: MachineTarget, machine: int = 0) -> str:
     s = {"command": {"machine": {f"{machine}": {
-        "target": int(target)}}}}
+        "command": {
+            "target": int(target)}}}}}
     return json.dumps(s)
 
 

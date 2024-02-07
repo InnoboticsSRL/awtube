@@ -30,6 +30,9 @@ from awtube.functions.move_to_position import MoveToPositioinFunction
 from awtube.logging import config 
 
 
+from awtube.types.gbc import MachineTarget
+
+
 class Robot(MoveJointsInterpolatedFunction,
             MoveLineFunction,
             EnableFunction,
@@ -94,7 +97,7 @@ class Robot(MoveJointsInterpolatedFunction,
         # test
         self.machine_commander.limits_disabled = True
         self.machine_commander.velocity = 1.75
-        self.machine_commander.target = 2
+        self.machine_commander.target = MachineTarget.FIELDBUS
 
     async def startup(self) -> None:
         """ Start the whole process of listening and commanding. """

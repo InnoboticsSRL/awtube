@@ -59,10 +59,15 @@ class MachineCommander(Commander):
         self._executing_cia402_command = False
         self._current_cw = 128
 
-        # robot limits
+        # robot settables
         self._limits_disabled = False
         self._target_feed_rate = 1
         self._target = MachineTarget.SIMULATION
+
+        # target set procedure vars
+        self._target_done = False
+        self._target_set_max_attempts = 5
+        self._target_set_attempts = 0
 
     # receiver property
     @property
@@ -114,6 +119,8 @@ class MachineCommander(Commander):
             raise AWTubeErrorException(
                 AwtubeError.BAD_ARGUMENT, 'Velocity limits should be a float, int or MachineTarget type.')
         self._target = MachineTarget(value)
+        self._target_done = False
+        self._target_set_attempts = 0
 
     def add_command(self, command: Command) -> None:
         """ Add commands to be sent and update the receiver 
@@ -141,7 +148,7 @@ class MachineCommander(Commander):
             self._logger.debug('Got new command from queue.')
             return
 
-    async def __execute_next_step(self) -> None:
+    async def __execute_next_cia402_transition(self) -> None:
         """ Execute next step to take the state machine at the desired state. """
         if self._executing_cia402_command:
             await asyncio.sleep(0.1)
@@ -181,13 +188,20 @@ class MachineCommander(Commander):
         await asyncio.sleep(1.0)
 
     async def __ensure_target(self) -> None:
-        """ Ensure target has the same value as set here. """
-        if self._status_observer.payload.machine.target != self._target:
+        """ 
+            Ensure target has the same value as set here.
+            It loops here until the target is reached.
+        """
+        if self._status_observer.payload.machine.target != self._target and self._target_set_attempts < self._target_set_max_attempts:
             self._logger.debug('Resetting target.')
             cmd = MachineTargetCommad(self.receiver, target=self._target)
             cmd.execute()
-        # check again after approximately 1 sec
-        await asyncio.sleep(1.0)
+            self._target_done = False
+            self._target_set_attempts += 1
+            # check again after approximately 1 sec
+            await asyncio.sleep(1.0)
+        else:
+            self._target_done = True
 
     async def execute_commands(self, wait_done: bool = False) -> None:
         self._logger.debug('Started executing commands.')
@@ -195,23 +209,37 @@ class MachineCommander(Commander):
             await self.__internal_loop()
 
     async def __internal_loop(self) -> None:
+        # the steps here are quasi cumulative
+
+        # step 1
+        # if observer not updated keep exiting
         if not self._status_observer.payload:
-            # if observer not updated keep exiting here
             await asyncio.sleep(0.1)
             return
 
+        # step 2
+        # if reciever not set keep exiting
         if not self._receiver:
-            print('No receiver!')
+            self._logger.error('No receiver!')
+            await asyncio.sleep(0.1)
             return
 
+        # step 3
+        # send heartbeat
         await self.__resend_heartbeat()
 
+        # step 4
+        # Keep looping until we change target.
+        if not self._target_done:
+            await self.__ensure_target()
+
+        # step 5
         await self.__get_command()
 
-        await self.__execute_next_step()
+        # step 6
+        await self.__execute_next_cia402_transition()
 
+        # step 7
         await self.__ensure_target_velocity_and_limits()
-
-        await self.__ensure_target()
 
         await asyncio.sleep(0.01)
