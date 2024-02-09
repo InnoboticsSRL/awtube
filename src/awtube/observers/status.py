@@ -8,6 +8,7 @@ import time
 
 from awtube.types.gbc import Status
 from awtube.observers.observer import Observer
+from awtube.errors.gbc import OperationError
 
 from awtube.logging import config
 
@@ -30,11 +31,9 @@ class StatusObserver(Observer):
             self._payload = Status(**js['status'])
             self._timestamp = time.time()
 
-            # check reported errors and raise
-            # if self._payload.machine.operation_error != OperationError.NONE:
-            #     raise OperationErrorException(
-            #         operation_error_type=self._payload.machine.operation_error)
-
+            # check reported errors and log
+            if self._payload.machine.operation_error != OperationError.NONE:
+                self._logger.error(self._payload.machine.operation_error)
         except KeyError as ke:
             # this means message doesn't contain status
             pass

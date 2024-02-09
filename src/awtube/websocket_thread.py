@@ -10,8 +10,6 @@ import websockets
 import asyncio
 import queue
 import logging
-# import ssl
-# import sys
 import threading
 from typing import Dict
 
@@ -26,10 +24,11 @@ logging.getLogger("websockets.client").propagate = False
 
 
 class WebsocketThread(threading.Thread, CommandReceiver):
-    """ Client for communicating on websockets
+    """ 
+        Client for communicating on websockets
     """
 
-    def __init__(self, url: str, headers: Dict[str, str] = None, freq: int = 100):
+    def __init__(self, url: str, headers: Dict[str, str] = None, freq: int = 100, event_loop: asyncio.AbstractEventLoop = None):
         """
         Args:
             url: Websocket url to connect to.
@@ -45,7 +44,7 @@ class WebsocketThread(threading.Thread, CommandReceiver):
         self.__freq = freq
         self._rate = 1/self.__freq
 
-        self.loop: asyncio.AbstractEventLoop = None
+        self.loop: asyncio.AbstractEventLoop = event_loop
         self.killed: bool = False
         self.outgoing = queue.Queue()
         # coroutines to be run asynchronously later they get the websocket as argument
@@ -53,7 +52,7 @@ class WebsocketThread(threading.Thread, CommandReceiver):
         self._observers = []
 
     def attach_observer(self, sub: Observer) -> None:
-        """ Attach observer. """
+        """ Attach Observer. """
         if sub not in self._observers:
             self._observers.append(sub)
 
@@ -72,36 +71,6 @@ class WebsocketThread(threading.Thread, CommandReceiver):
         except Exception as e:
             raise e
 
-    # def __enter__(self):
-    #     """ Context manager for running the websocket """
-    #     print("__enter__")
-    #     self.start()
-    #     return self
-
-    # def __exit__(self, *_):
-    #     """ Context manager for cleaning up event loop and thread """
-    #     if not self.killed:
-    #         self.kill()
-    #     self.join()
-
-    def kill(self):
-        """ Cancel tasks and stop loop from sync, threadsafe """
-        self.killed = True
-        asyncio.run_coroutine_threadsafe(self.stop_loop(), self.loop)
-
-    async def stop_loop(self):
-        """ Cancel tasks and stop loop, must be called threadsafe """
-        tasks = [
-            task
-            for task in asyncio.all_tasks()
-            if task is not asyncio.current_task()
-        ]
-        for task in tasks:
-            task.cancel()
-
-        await asyncio.gather(*tasks, return_exceptions=True)
-        self.loop.stop()
-
     async def listen(self):
         """ Listen to the websocket and local outgoing queue """
         try:
@@ -110,7 +79,6 @@ class WebsocketThread(threading.Thread, CommandReceiver):
                 # await asyncio.gather(*(task(socket) for task in self._tasks), return_exceptions=True)
                 await asyncio.gather(*(task(socket) for task in self._tasks))
         except ConnectionRefusedError:
-            # self.logger
             self._logger.error('Connection refused!')
 
     async def listen_socket(self, socket):
@@ -133,38 +101,3 @@ class WebsocketThread(threading.Thread, CommandReceiver):
     def put(self, message: str) -> None:
         """ Put message in the receivers queue. """
         self.outgoing.put(message)
-
-       # def run(self):
-    #     """ Main execution of the thread. Is called when entering context """
-    #     self.loop = asyncio.new_event_loop()
-    #     # self.ignore_aiohttp_ssl_error()
-    #     asyncio.set_event_loop(self.loop)
-    #     self.loop.create_task(self.listen())
-    #     self.loop.run_forever()
-
-    # def ignore_aiohttp_ssl_error(self):
-    #     """ Ignore aiohttp #3535 / cpython #13548 issue with SSL close. """
-    #     if sys.version_info >= (3, 7, 4):
-    #         return
-
-    #     orig_handler = self.loop.get_exception_handler()
-
-    #     def ignore_ssl_error(loop, context):
-    #         if context.get("message") in {
-    #             "SSL error in data received",
-    #             "Fatal error on transport",
-    #         }:
-    #             exception = context.get('exception')
-    #             protocol = context.get('protocol')
-    #             if (
-    #                 isinstance(exception, ssl.SSLError)
-    #                 and exception.reason == 'KRB5_S_INIT'
-    #                 and isinstance(protocol, asyncio.sslproto.SSLProtocol)
-    #             ):
-    #                 return
-    #         if orig_handler is not None:
-    #             orig_handler(loop, context)
-    #         else:
-    #             loop.default_exception_handler(context)
-
-    #     self.loop.set_exception_handler(ignore_ssl_error)

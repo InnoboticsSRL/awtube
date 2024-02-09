@@ -3,13 +3,13 @@
 """ Defines the stream observer which implements Observer Interface. """
 
 from __future__ import annotations
-from abc import ABC, abstractmethod
 import json
 import time
+import logging
+
 from awtube.types.gbc import StreamStatus
 from awtube.observers.observer import Observer
 from awtube.logging import config
-import logging
 
 
 class StreamObserver(Observer):
@@ -32,5 +32,6 @@ class StreamObserver(Observer):
         except KeyError as ke:
             # this means message doesn't contain stream
             pass
+            # self._logger.error(ke)
         except Exception as e:
             self._logger.error(e)

@@ -31,6 +31,10 @@ class StreamCommander(Commander):
         self._capacity_min: int = capacity_min
         self.__tag = 0
 
+        # stream observer None count
+        self._stream_observer_tentatives = 0
+        self._stream_observer_max_tentatives = 10
+
     def add_command(self, command: Command) -> None:
         """ Add commands to be sent """
         self._command_queue.put(command)
@@ -43,9 +47,16 @@ class StreamCommander(Commander):
             if self._command_queue.empty():
                 # Finish when no more commands
                 break
+            if self._stream_observer_tentatives >= self._stream_observer_max_tentatives:
+                raise Exception("Couldn't update StreamObserver.")
             if not self._stream_observer.payload:
                 # if no feedback recieved yet
+                self._stream_observer_tentatives += 1
                 await asyncio.sleep(0.1)
+                print('StreamObserver is None')
+                continue
+            else:
+                self._stream_observer_tentatives = 0
             if self._stream_observer.payload.capacity >= self._capacity_min:
                 # get from txbuffer and send
                 cmd: Command = self._command_queue.get(block=False)

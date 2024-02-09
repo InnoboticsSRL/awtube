@@ -8,35 +8,33 @@
 from __future__ import annotations
 import asyncio
 import logging
-from awtube.websocket_thread import WebsocketThread
+import concurrent.futures
 
-# Commands and Commanders
 from awtube.command_receiver import CommandReceiver
 from awtube.commanders.stream import StreamCommander
 from awtube.commanders.machine import MachineCommander
 
-# Observers
 from awtube.observers.stream import StreamObserver
 from awtube.observers.telemetry import TelemetryObserver
 from awtube.observers.status import StatusObserver
 
-# Robot functions
 from awtube.functions.move_joints_interpolated import MoveJointsInterpolatedFunction
 from awtube.functions.move_line import MoveLineFunction
 from awtube.functions.enable import EnableFunction
 from awtube.functions.move_to_position import MoveToPositioinFunction
 
-# logging
-from awtube.logging import config 
-
+from awtube.websocket_thread import WebsocketThread
 
 from awtube.types.gbc import MachineTarget
 
+from awtube.logging import config
 
-class Robot(MoveJointsInterpolatedFunction,
-            MoveLineFunction,
-            EnableFunction,
-            MoveToPositioinFunction):
+
+class Robot(
+    MoveJointsInterpolatedFunction,
+    MoveLineFunction,
+    EnableFunction,
+        MoveToPositioinFunction):
     """
         Class which puts everything together, commanders, observers and robot functions.
     """
@@ -48,7 +46,13 @@ class Robot(MoveJointsInterpolatedFunction,
                  name: str = "AWTube",
                  log_level: int | str = logging.INFO,
                  logger: logging.Logger | None = None):
+        # loop
+        self.loop: asyncio.AbstractEventLoop = asyncio.new_event_loop()
+        self.killed: bool = False
 
+        # self.executor = concurrent.futures.ThreadPoolExecutor()
+
+        # robot properties
         self._name = name
         self._robot_ip = robot_ip
         self._port = port
@@ -62,7 +66,7 @@ class Robot(MoveJointsInterpolatedFunction,
 
         # Command receiver
         self.receiver: CommandReceiver = WebsocketThread(
-            f"ws://{self._robot_ip}:{self._port}/ws")
+            f"ws://{self._robot_ip}:{self._port}/ws", event_loop=self.loop)
 
         # Observers
         self.stream_observer = StreamObserver()
@@ -76,31 +80,73 @@ class Robot(MoveJointsInterpolatedFunction,
         self.machine_commander.receiver = self.receiver
 
         # Register observers
-        self.receiver.attach_observer(self.stream_observer)
         self.receiver.attach_observer(self.telemetry_observer)
+        self.receiver.attach_observer(self.stream_observer)
         self.receiver.attach_observer(self.status_observer)
 
         # Define robot functions
         MoveJointsInterpolatedFunction.__init__(self,
                                                 self.stream_commander,
-                                                self.receiver)
+                                                self.receiver,
+                                                self.loop)
         MoveLineFunction.__init__(self,
                                   self.stream_commander,
-                                  self.receiver)
+                                  self.receiver,
+                                  self.loop)
         MoveToPositioinFunction.__init__(self,
                                          self.stream_commander,
                                          self.receiver)
         EnableFunction.__init__(self,
                                 self.machine_commander,
                                 self.receiver)
-        
+
         # test
         self.machine_commander.limits_disabled = True
-        self.machine_commander.velocity = 1.75
-        self.machine_commander.target = MachineTarget.FIELDBUS
+        # self.machine_commander.velocity = 0.1
+        self.machine_commander.target = MachineTarget.SIMULATION
 
-    async def startup(self) -> None:
+    def run(self):
+        """ Main execution of the thread. Is called when entering context """
+        self.loop = asyncio.new_event_loop()
+        # self.loop = asyncio.get_event_loop()
+        # self.ignore_aiohttp_ssl_error()
+        asyncio.set_event_loop(self.loop)
+        # self.receiver.loop = self.loop
+        # self.receiver.start()
+        self.loop.create_task(self.receiver.listen())
+        self.loop.create_task(self.machine_commander.execute_commands())
+        self.loop.run_forever()
+
+    def kill(self):
+        """ Cancel tasks and stop loop from sync, threadsafe """
+        self._logger.debug('Killed robot.')
+        self.killed = True
+        asyncio.run_coroutine_threadsafe(self.stop_loop(), self.loop)
+        self.main_future.cancel()
+
+    async def stop_loop(self):
+        """ Cancel tasks and stop loop, must be called threadsafe """
+        tasks = [
+            task
+            for task in asyncio.all_tasks()
+            if task is not asyncio.current_task()
+        ]
+        for task in tasks:
+            task.cancel()
+
+        await asyncio.gather(*tasks, return_exceptions=True)
+        self.loop.stop()
+
+    async def startup_async(self) -> None:
         """ Start the whole process of listening and commanding. """
+        await asyncio.gather(self.receiver.listen())
 
-        await asyncio.gather(self.receiver.listen(),
-                             self.machine_commander.execute_commands())
+    def startup(self) -> bool:
+        """
+            The startup procedure for the sync API.
+            Run the procedure and return when the 
+            robot is ready to take new commands.
+        """
+        # self.main_future = self.loop.run_in_executor(self.executor, self.run)
+        self.main_future = self.loop.run_in_executor(None, self.run)
+        return True

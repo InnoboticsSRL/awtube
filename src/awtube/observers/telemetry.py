@@ -6,12 +6,13 @@ from __future__ import annotations
 from collections import deque
 import json
 import time
+import logging
+import asyncio
 
 from awtube.types.gbc import StreamStatus
 from awtube.observers.observer import Observer
 from awtube.types.aw import JointStates
 from awtube.logging import config
-import logging
 
 
 class TelemetryObserver(Observer):
