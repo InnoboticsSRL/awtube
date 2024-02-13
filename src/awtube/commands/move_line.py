@@ -20,11 +20,12 @@ class MoveLineCommand(Command):
                  translation: tp.Dict[str, float],
                  rotation: tp.Dict[str, float],
                  tag: int = 0) -> None:
-        pose = Pose(position=Position(**translation),
+        self.tag
+        self.pose = Pose(position=Position(**translation),
                     orientation=Quaternion(**rotation))
         self._receiver = receiver
-        self._payload = stream_move_line_cmd(pose, tag=tag)
 
     def execute(self) -> None:
         """ Put command payload in receiver queue. """
+        self._payload = stream_move_line_cmd(self.pose, tag=self.tag)
         self._receiver.put(self._payload)

@@ -6,10 +6,14 @@ from __future__ import annotations
 import asyncio
 import queue
 import logging
+from typing import Iterator
+import copy
 
 from awtube.observers.stream import StreamObserver
 from awtube.commanders.commander import Commander
 from awtube.commands.command import Command
+from awtube.types.gbc import StreamState
+from awtube.types.function_result import FunctionResult
 
 from awtube.logging import config
 
@@ -39,36 +43,53 @@ class StreamCommander(Commander):
         """ Add commands to be sent """
         self._command_queue.put(command)
 
-    async def execute_commands(self, wait_done: bool = False) -> None:
-        """ Execute all commands, asyncio coroutine which takes messages from txbuffer and puts them in the outter queue,
-            respecting the capacity of the stream. It awaits until there is space to add the command payloads. """
-        self._logger.debug('Started executing commands.')
+    async def wait_for_cmd_execution(self, command: Command) -> FunctionResult:
+        command.execute()
+
+        while True:
+            if self._stream_observer.payload.tag == command.tag and self._stream_observer.payload.state == StreamState.IDLE:
+                print(
+                    f'done movement!!!!!!!: {self._stream_observer.payload.state}')
+                return FunctionResult.SUCCESS
+            # print(
+            #     f'executing with state: {self._stream_observer.payload.state}')
+            # print(
+            #     f'executing with task tag: {self._stream_observer.payload.tag}')
+            # print(
+            #     f'requested task tag: {command.tag}')
+            # print('--------------------------')
+            await asyncio.sleep(1)
+
+    async def execute_commands(self, wait_done: bool = False) -> Iterator[asyncio.Task]:
+        """ Asyncio Generator which takes messages from object's queue and executes them, 
+            respecting the capacity of the stream, which in the meantime yields asyncio.Task 
+            objects that represent the stream activities requested to GBC. """
+
+        self._logger.debug('Started execution.')
+
         while True:
             if self._command_queue.empty():
-                # Finish when no more commands
                 break
+
             if self._stream_observer_tentatives >= self._stream_observer_max_tentatives:
                 raise Exception("Couldn't update StreamObserver.")
+
             if not self._stream_observer.payload:
-                # if no feedback recieved yet
+                # if no feedback
                 self._stream_observer_tentatives += 1
                 await asyncio.sleep(0.1)
                 print('StreamObserver is None')
                 continue
             else:
                 self._stream_observer_tentatives = 0
+
             if self._stream_observer.payload.capacity >= self._capacity_min:
-                # get from txbuffer and send
                 cmd: Command = self._command_queue.get(block=False)
-                cmd.tag = self.__tag
-                cmd.execute()
                 self.__tag += 1
-                self._logger.debug('Got new command from queue.')
-                # We wait to give time to server to update capacity
+                cmd.tag = copy.copy(self.__tag)
+                # cmd.execute()
+                task = asyncio.create_task(self.wait_for_cmd_execution(cmd))
+                yield task
                 await asyncio.sleep(0.02)
             else:
                 await asyncio.sleep(0.1)
-
-        if wait_done:
-            # simulate work using sleep
-            await asyncio.sleep(5)

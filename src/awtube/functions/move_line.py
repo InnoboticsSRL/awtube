@@ -11,6 +11,7 @@ from awtube.functions.robot_function import RobotFunction
 from awtube.commanders.stream import StreamCommander
 from awtube.command_receiver import CommandReceiver
 from awtube.commands import move_line
+from awtube.types.function_result import FunctionResult
 
 
 class MoveLineFunction(RobotFunction):
@@ -40,7 +41,7 @@ class MoveLineFunction(RobotFunction):
     async def move_line_async(self,
                               translation: tp.Dict[str, float],
                               rotation: tp.Dict[str, float],
-                              tag: int = 0) -> None:
+                              tag: int = 0) -> FunctionResult:
         """ Send a moveLine command to a CommandReceiver.
 
         Args:
@@ -53,21 +54,15 @@ class MoveLineFunction(RobotFunction):
         cmd = move_line.MoveLineCommand(
             self._receiver, translation, rotation, tag)
         self._stream_commander.add_command(cmd)
-        await self._stream_commander.execute_commands()
+
+        # generator
+        execution = self._stream_commander.execute_commands()
 
         print('wait async check')
 
         # give it 1 sec to update stream_observer
-        await asyncio.sleep(1)
+        # await asyncio.sleep(1)
 
-        # TODO: really important
-        # logic here to improve clear
-        while self.stream_observer.payload.state == StreamState.ACTIVE:
-            # print('Active !!!')
-            await asyncio.sleep(0.2)
-        while True:
-            if self.stream_observer.payload.tag == tag and self.stream_observer.payload.state == StreamState.IDLE:
-                print(f'done movement: {self.stream_observer.payload.state}')
-                return True
-            print(f'not yet: {self.stream_observer.payload.state}')
-            await asyncio.sleep(0.05)
+        task = await anext(execution)
+
+        return await task

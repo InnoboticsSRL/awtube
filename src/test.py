@@ -1,5 +1,5 @@
 from awtube.robot import Robot
-import asyncio
+from awtube.types.gbc import MachineTarget
 import time
 
 a = Robot()
@@ -7,7 +7,7 @@ a = Robot()
 a.enable()
 
 # a.start()
-
+a.target = MachineTarget.SIMULATION
 
 a.startup()
 
@@ -15,6 +15,8 @@ time.sleep(5)
 
 print('hereeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee')
 
+a.machine_commander.velocity = 0.2
+
 a.move_line(
     {"x": 400,
      "y": -50,
@@ -24,7 +26,7 @@ a.move_line(
      "z": 0.49999999999999994,
      "w": 5.3028761936245346e-17})
 
-a.machine_commander.velocity = 2
+# a.machine_commander.velocity = 0.2
 
 
 a.move_line(
@@ -36,7 +38,7 @@ a.move_line(
      "z": 0.49999999999999994,
      "w": 5.3028761936245346e-17})
 
-a.machine_commander.velocity = 0.5
+# a.machine_commander.velocity = 0.5
 
 a.move_line(
     {"x": 550,
@@ -47,7 +49,7 @@ a.move_line(
      "z": 0.49999999999999994,
      "w": 5.3028761936245346e-17})
 
-a.machine_commander.velocity = 1
+# a.machine_commander.velocity = 1
 
 a.move_line(
     {"x": 550,
@@ -58,7 +60,7 @@ a.move_line(
      "z": 0.49999999999999994,
      "w": 5.3028761936245346e-17})
 
-a.machine_commander.velocity = 2
+# a.machine_commander.velocity = 2
 
 a.move_line(
     {"x": 400,
