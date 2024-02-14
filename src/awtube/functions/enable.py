@@ -4,9 +4,9 @@
 
 from awtube.functions.robot_function import RobotFunction
 from awtube.commanders.machine import MachineCommander
-from awtube.command_receiver import CommandReceiver
+from awtube.recievers.command_receiver import CommandReceiver
 from awtube.commands.machine_state import MachineStateCommad
-from awtube.cia402_machine import CIA402MachineState
+from awtube.cia402.cia402_machine import CIA402MachineState
 
 
 class EnableFunction(RobotFunction):

@@ -13,7 +13,7 @@ import logging
 import threading
 from typing import Dict
 
-from awtube.command_receiver import CommandReceiver
+from awtube.recievers.command_receiver import CommandReceiver
 from awtube.observers.observer import Observer
 
 from awtube.logging import config

@@ -1,5 +1,9 @@
 /src/awtube/__pycache__
 /src/awtube/commands/__pycache__
+/src/awtube/ci402/__pycache__
+/src/awtube/recievers/__pycache__
+/src/awtube/messages/__pycache__
+/src/awtube/types/__pycache__
 /src/awtube/observers/__pycache__
 /src/awtube/commanders/__pycache__
 /src/awtube/logging/__pycache__

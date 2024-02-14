@@ -3,10 +3,9 @@
 """ MachineTarget command that implements Command Interface  """
 
 from awtube.types.gbc import MachineTarget
-from awtube.msg_builders import get_kinematics_configuration_command
-
+from awtube.messages.command_builder import CommandBuilder
 from awtube.commands.command import Command
-from awtube.command_receiver import CommandReceiver
+from awtube.recievers.command_receiver import CommandReceiver
 from awtube.errors.awtube import AwtubeError, AWTubeErrorException
 
 
@@ -24,6 +23,7 @@ class KinematicsConfigurationCommad(Command):
         self._target_feed_rate = target_feed_rate
         self._receiver = receiver
         self._kc_config = kc_config
+        self.builder = CommandBuilder()
 
     @property
     def disable_limits(self) -> bool:
@@ -49,5 +49,12 @@ class KinematicsConfigurationCommad(Command):
 
     def execute(self) -> None:
         """ Put command payload in receiver queue. """
-        self._receiver.put(get_kinematics_configuration_command(
-            disable_limits=self._disable_limits, fro=self._target_feed_rate))
+        msg = None
+        if self._disable_limits:
+            msg = self.builder.reset().disable_limits(self._disable_limits).build()
+            self._receiver.put(msg)
+            return
+        elif self._target_feed_rate:
+            msg = self.builder.reset().desired_feedrate(self._target_feed_rate).build()
+            self._receiver.put(msg)
+            return

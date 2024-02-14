@@ -4,8 +4,8 @@
 """ Heartbeat command that implements Command Interface  """
 
 from awtube.commands.command import Command
-from awtube.command_receiver import CommandReceiver
-from awtube.msg_builders import get_machine_command_heartbeat
+from awtube.recievers.command_receiver import CommandReceiver
+from awtube.messages.command_builder import CommandBuilder
 
 
 class HeartbeatCommad(Command):
@@ -20,9 +20,10 @@ class HeartbeatCommad(Command):
         self._heartbeat = heartbeat
         self._machine = machine
         self._receiver = receiver
-        self._payload = get_machine_command_heartbeat(self._heartbeat,
-                                                      machine=self._machine)
+        self.builder = CommandBuilder()
 
     def execute(self) -> None:
         """ Put command payload in receiver queue. """
-        self._receiver.put(self._payload)
+        msg = self.builder.reset().machine(
+            self._machine).heartbeat(self._heartbeat).build()
+        self._receiver.put(msg)

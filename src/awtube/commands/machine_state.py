@@ -2,14 +2,10 @@
 
 """ MachineState command that implements Command Interface  """
 
-import typing as tp
 from awtube.commands.command import Command
-from awtube.command_receiver import CommandReceiver
-from awtube.msg_builders import *
-from awtube.types.aw import *
-from awtube.types.gbc import *
-from enum import Enum
-from awtube.cia402_machine import CIA402MachineState
+from awtube.recievers.command_receiver import CommandReceiver
+from awtube.messages.command_builder import CommandBuilder
+from awtube.cia402.cia402_machine import CIA402MachineState
 
 
 class MachineStateCommad(Command):
@@ -25,6 +21,7 @@ class MachineStateCommad(Command):
         self._control_word = 0
         self._machine = machine
         self._receiver = receiver
+        self.builder = CommandBuilder()
 
     @property
     def desired_state(self) -> CIA402MachineState:
@@ -52,5 +49,6 @@ class MachineStateCommad(Command):
 
     def execute(self) -> None:
         """ Put command payload in receiver queue. """
-        self._receiver.put(get_machine_command(self._control_word,
-                                               machine=self._machine))
+        msg = self.builder.reset().machine(self._machine).control_word(
+            self._control_word).build()
+        self._receiver.put(msg)

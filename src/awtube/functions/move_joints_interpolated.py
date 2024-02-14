@@ -4,16 +4,18 @@
 
 import asyncio
 from asyncio import AbstractEventLoop
-from typing import Iterator
+from typing import Iterator, AsyncIterator
 
 from awtube.functions.robot_function import RobotFunction
 from awtube.commands.move_joints_interpolated import MoveJointsInterpolatedCommand
 from awtube.commanders.stream import StreamCommander
-from awtube.command_receiver import CommandReceiver
+from awtube.recievers.command_receiver import CommandReceiver
 from awtube.types.function_result import FunctionResult
 
 
 class MoveJointsInterpolatedFunction(RobotFunction):
+    """ Robot function to move robot with a trajectory, where GBC interpolates intermediate points."""
+
     def __init__(self,
                  stream_commander: StreamCommander,
                  receiver: CommandReceiver,
@@ -23,14 +25,14 @@ class MoveJointsInterpolatedFunction(RobotFunction):
         self._loop = loop
 
     def move_joints_interpolated_gen(self, points) -> Iterator[FunctionResult]:
-        """ Generator used to send a moveLine command to a CommandReceiver and recieve feedback on points done.
+        """ Async generator used to send a moveLine command to a CommandReceiver and recieve feedback on points done.
         Args:
             translation (tp.Dict[str, float]): dict of translation x, y, z
             rotation (tp.Dict[str, float]): Dict of rotation, a quaternion: x, y, z, w
             tag (int, optional): tag(id) with which to send the command to the robot. Defaults to 0.
         """
         loop = asyncio.get_event_loop()
-        asyncio_generator = self.move_joints_interpolated_async(points)
+        asyncio_generator = self.move_joints_interpolated_async_gen(points)
 
         async def exec(gen):
             # await next task from generator
@@ -38,7 +40,8 @@ class MoveJointsInterpolatedFunction(RobotFunction):
 
         while True:
             try:
-                result = loop.run_until_complete(exec(asyncio_generator))
+                result = loop.run_until_complete(
+                    exec(asyncio_generator))
                 yield result
             except StopAsyncIteration:
                 break
@@ -51,10 +54,10 @@ class MoveJointsInterpolatedFunction(RobotFunction):
             tag (int, optional): tag(id) with which to send the command to the robot. Defaults to 0.
         """
         self._loop.run_until_complete(
-            self.move_joints_interpolated_async(points))
+            self.move_joints_interpolated_async_gen(points))
 
-    async def move_joints_interpolated_async(self, points) -> Iterator[asyncio.Task]:
-        """ Send a moveLine command to a CommandReceiver
+    async def move_joints_interpolated_async_gen(self, points) -> AsyncIterator[asyncio.Task]:
+        """ Generator used to send a moveLine command to a CommandReceiver and recieve feedback on points done.
         Args:
             translation (tp.Dict[str, float]): dict of translation x, y, z
             rotation (tp.Dict[str, float]): Dict of rotation, a quaternion: x, y, z, w

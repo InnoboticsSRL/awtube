@@ -3,11 +3,11 @@
 """ MoveLine command that implements Command Interface  """
 
 import typing as tp
+
 from awtube.commands.command import Command
-from awtube.command_receiver import CommandReceiver
-from awtube.msg_builders import *
-from awtube.types.aw import *
-from awtube.types.gbc import *
+from awtube.recievers.command_receiver import CommandReceiver
+from awtube.messages.stream_builder import StreamBuilder
+from awtube.types.aw import Pose, Position, Quaternion
 
 
 class MoveLineCommand(Command):
@@ -19,13 +19,20 @@ class MoveLineCommand(Command):
                  receiver: CommandReceiver,
                  translation: tp.Dict[str, float],
                  rotation: tp.Dict[str, float],
-                 tag: int = 0) -> None:
-        self.tag
+                 tag: int = 0,
+                 kc: int = 0) -> None:
         self.pose = Pose(position=Position(**translation),
-                    orientation=Quaternion(**rotation))
+                         orientation=Quaternion(**rotation))
         self._receiver = receiver
+        self.tag = tag
+        self.kc = kc
+        self.builder = StreamBuilder()
 
     def execute(self) -> None:
         """ Put command payload in receiver queue. """
-        self._payload = stream_move_line_cmd(self.pose, tag=self.tag)
-        self._receiver.put(self._payload)
+        msg = self.builder.reset().move_line(pose=self.pose,
+                                             tag=self.tag,
+                                             kc=self.kc,
+                                             move_params={}
+                                             ).build()
+        self._receiver.put(msg)

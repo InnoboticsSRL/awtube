@@ -7,7 +7,7 @@ from awtube.functions.robot_function import RobotFunction
 from awtube.commands.move_to_position import MoveToPositionCommand
 from awtube.types.aw import Position, Quaternion
 from awtube.commanders.stream import StreamCommander
-from awtube.command_receiver import CommandReceiver
+from awtube.recievers.command_receiver import CommandReceiver
 from awtube.types.aw import Pose
 
 

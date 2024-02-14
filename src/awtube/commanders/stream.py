@@ -6,7 +6,7 @@ from __future__ import annotations
 import asyncio
 import queue
 import logging
-from typing import Iterator
+from typing import AsyncGenerator
 import copy
 
 from awtube.observers.stream import StreamObserver
@@ -47,6 +47,10 @@ class StreamCommander(Commander):
         command.execute()
 
         while True:
+            # if self._stream_observer.payload.tag > command.tag:
+            #     # means we finished task too fast to recieve feedback
+            #     return FunctionResult.SUCCESS
+
             if self._stream_observer.payload.tag == command.tag and self._stream_observer.payload.state == StreamState.IDLE:
                 print(
                     f'done movement!!!!!!!: {self._stream_observer.payload.state}')
@@ -58,9 +62,9 @@ class StreamCommander(Commander):
             # print(
             #     f'requested task tag: {command.tag}')
             # print('--------------------------')
-            await asyncio.sleep(1)
+            await asyncio.sleep(0.2)
 
-    async def execute_commands(self, wait_done: bool = False) -> Iterator[asyncio.Task]:
+    async def execute_commands(self, wait_done: bool = False) -> AsyncGenerator[asyncio.Task]:
         """ Asyncio Generator which takes messages from object's queue and executes them, 
             respecting the capacity of the stream, which in the meantime yields asyncio.Task 
             objects that represent the stream activities requested to GBC. """
@@ -87,7 +91,7 @@ class StreamCommander(Commander):
                 cmd: Command = self._command_queue.get(block=False)
                 self.__tag += 1
                 cmd.tag = copy.copy(self.__tag)
-                # cmd.execute()
+                # send command to GBC and yield task
                 task = asyncio.create_task(self.wait_for_cmd_execution(cmd))
                 yield task
                 await asyncio.sleep(0.02)

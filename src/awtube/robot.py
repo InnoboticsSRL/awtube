@@ -10,7 +10,7 @@ import asyncio
 import logging
 import concurrent.futures
 
-from awtube.command_receiver import CommandReceiver
+from awtube.recievers.command_receiver import CommandReceiver
 from awtube.commanders.stream import StreamCommander
 from awtube.commanders.machine import MachineCommander
 
@@ -23,7 +23,7 @@ from awtube.functions.move_line import MoveLineFunction
 from awtube.functions.enable import EnableFunction
 from awtube.functions.move_to_position import MoveToPositioinFunction
 
-from awtube.websocket_thread import WebsocketThread
+from awtube.recievers.websocket_thread import WebsocketThread
 
 from awtube.types.gbc import MachineTarget
 

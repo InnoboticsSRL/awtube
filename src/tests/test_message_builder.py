@@ -6,6 +6,7 @@ from awtube.commands import *
 from awtube.msg_builders import stream_move_joints_cmd, \
     stream_move_joints_interpolated_cmd, \
     stream_move_line_cmd
+from awtube.messages.stream_builder import StreamBuilder
 
 """
   Tests for the module commands, testing the validity of the json commands generated.
@@ -21,6 +22,8 @@ class TestCommands:
     t = 15
     kc = 2
     s_idx = 0
+
+    builder: StreamBuilder = StreamBuilder()
 
     def test_stream_move_joints_cmd(self):
         correct = {"stream":
@@ -38,8 +41,13 @@ class TestCommands:
                     ],
                     "name": "default",
                     "enableEndProgram": False}}
-        assert json.loads(stream_move_joints_cmd(
-            joints=self.j, stream_index=self.s_idx, tag=self.t, kinematics_configuration_index=self.kc)) == correct
+        self.builder.reset()
+        result = self.builder.move_joints(joint_position_array=self.j.positions,
+                                          tag=self.t,
+                                          kc=self.kc,
+                                          move_params={}
+                                          ).build()
+        assert json.loads(result) == correct
 
     def test_stream_move_joints_interpolated_cmd(self):
         """ Duration 0.1 always sent the same here"""
@@ -60,8 +68,14 @@ class TestCommands:
             ],
             "name": "default",
             "enableEndProgram": False}}
-        assert json.loads(stream_move_joints_interpolated_cmd(
-            joints=self.j, stream_index=self.s_idx, tag=self.t, kinematics_configuration_index=self.kc)) == correct
+        self.builder.reset()
+        result = self.builder.move_joints_interpolated(joint_position_array=self.j.positions,
+                                                       joint_velocity_array=self.j.positions,
+                                                       tag=self.t,
+                                                       kc=self.kc,
+                                                       move_params={}
+                                                       ).build()
+        assert json.loads(result) == correct
 
     def test_stream_move_line_cmd(self):
         correct = {"stream":
@@ -89,5 +103,10 @@ class TestCommands:
                         }}],
                     "name": "default",
                     "enableEndProgram": False}}
-        assert json.loads(stream_move_line_cmd(
-            pose=self.p, stream_index=self.s_idx, tag=self.t, kinematics_configuration_index=self.kc)) == correct
+        self.builder.reset()
+        result = self.builder.move_line(pose=self.p,
+                                        tag=self.t,
+                                        kc=self.kc,
+                                        move_params={}
+                                        ).build()
+        assert json.loads(result) == correct

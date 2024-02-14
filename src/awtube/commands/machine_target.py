@@ -3,10 +3,9 @@
 """ MachineTarget command that implements Command Interface  """
 
 from awtube.types.gbc import MachineTarget
-from awtube.msg_builders import get_machine_target_command
-
+from awtube.messages.command_builder import CommandBuilder
 from awtube.commands.command import Command
-from awtube.command_receiver import CommandReceiver
+from awtube.recievers.command_receiver import CommandReceiver
 
 
 class MachineTargetCommad(Command):
@@ -21,6 +20,7 @@ class MachineTargetCommad(Command):
         self._receiver = receiver
         self._machine = machine
         self._target = target
+        self.builder = CommandBuilder()
 
     @property
     def target(self) -> MachineTarget:
@@ -33,5 +33,6 @@ class MachineTargetCommad(Command):
 
     def execute(self) -> None:
         """ Put command payload in receiver queue. """
-        self._receiver.put(get_machine_target_command(self._target,
-                                                      machine=self._machine))
+        msg = self.builder.reset().machine(
+            self._machine).machine_target(self._target).build()
+        self._receiver.put(msg)

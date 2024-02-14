@@ -9,7 +9,7 @@ from awtube.types.gbc import StreamState
 
 from awtube.functions.robot_function import RobotFunction
 from awtube.commanders.stream import StreamCommander
-from awtube.command_receiver import CommandReceiver
+from awtube.recievers.command_receiver import CommandReceiver
 from awtube.commands import move_line
 from awtube.types.function_result import FunctionResult
 

@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
-""" Contains types inherent to GBC. """
+""" Contains types inherent to GBC modeled with pydantic. """
 
 import typing as tp
 from enum import IntEnum
 from pydantic import BaseModel, Field
+
 from awtube.errors.gbc import OperationError
-from awtube.types.aw import Position
 
 
 class StreamState(IntEnum):
@@ -132,70 +132,6 @@ class ActivityStatus(BaseModel):
     state: int = Field(None)
 
 
-class MoveParametersConfig(BaseModel):
-    """ Configuration parameters for move parameters. """
-    amax_percentage: float = Field(None, alias='amaxPercentage')
-    blend_time_percentage: float = Field(None, alias='blendTimePercentage')
-    blend_tolerance: float = Field(None, alias='blendTolerance')
-    blend_type: BlendType = Field(None, alias='blendType')
-    jmax_percentage: float = Field(None, alias='jmaxPercentage')
-    # Linear and angular limit profile to use for mov
-    limit_configuration_index: float = Field(
-        None, alias='limitConfigurationIndex')
-    name: str = Field(None)
-    sync_type: SyncType = Field(None, alias='syncType')
-    sync_value: float = Field(None, alias='syncValue')
-    tool_index: int = Field(None, alias='toolIndex')
-    vmax: float = Field(None)
-    vmax_percentage: float = Field(None, alias='vmaxPercentage')
-
-
-class StreamConfig(BaseModel):
-    stream_index: int = Field(None, alias='streamIndex')
-    items: list = Field(None)
-    name: int = Field('default')
-    enable_end_program: bool = Field(
-        False, serialization_alias='enableEndProgram')
-
-
-class MoveJointsStreamConfig(BaseModel):
-    move_params: MoveParametersConfig | dict = Field(
-        {}, serialization_alias='moveParams')
-    kinematics_configuration_index: int = Field(
-        None, serialization_alias='kinematicsConfigurationIndex')
-    joint_position_array: list = Field(
-        None, serialization_alias='jointPositionArray')
-
-
-class MoveJointsStreamItem(BaseModel):
-    activity_type: ActivityType = Field(
-        ActivityType.MOVEJOINTS, serialization_alias='activityType')
-    tag: int = Field(None)
-    move_joints: MoveJointsStreamConfig = Field(
-        None, serialization_alias='moveJoints')
-
-
-class MoveJointsInterpolatedStreamConfig(BaseModel):
-    move_params: MoveParametersConfig | dict = Field(
-        {}, serialization_alias='moveParams')
-    kinematics_configuration_index: int = Field(
-        None, serialization_alias='kinematicsConfigurationIndex')
-    duration: float = Field(
-        0.100)
-    joint_position_array: list = Field(
-        None, serialization_alias='jointPositionArray')
-    joint_velocity_array: list = Field(
-        None, serialization_alias='jointVelocityArray')
-
-
-class MoveJointsInterpolatedStreamItem(BaseModel):
-    activity_type: ActivityType = Field(
-        ActivityType.MOVEJOINTSINTERPOLATED, serialization_alias='activityType')
-    tag: int = Field(None)
-    move_joints_interpolated: MoveJointsInterpolatedStreamConfig = Field(
-        None, serialization_alias='moveJointsInterpolated')
-
-
 class Vector3(BaseModel):
     x: float = Field(None)
     y: float = Field(None)
@@ -228,48 +164,9 @@ class CartesianPositionConfig(BaseModel):
     configuration: int = Field(None)
 
 
-class MoveToPositionStreamConfig(BaseModel):
-    move_params: MoveParametersConfig | dict = Field(
-        {}, serialization_alias='moveParams')
-    kinematics_configuration_index: int = Field(
-        None, serialization_alias='kinematicsConfigurationIndex')
-    cartesian_position: CartesianPositionConfig = Field(
-        None, serialization_alias='cartesianPosition')
-
-
-class MoveToPositionStreamItem(BaseModel):
-    activity_type: ActivityType = Field(
-        ActivityType.MOVETOPOSITION, serialization_alias='activityType')
-    tag: int = Field(None)
-    move_to_position: MoveToPositionStreamConfig = Field(
-        None, serialization_alias='moveToPosition')
-
-
 class Line(BaseModel):
     translation: Vector3 = Field(None)
     rotation: Quat = Field(None)
-
-
-class MoveLineStreamConfig(BaseModel):
-    move_params: MoveParametersConfig | dict = Field(
-        {}, serialization_alias='moveParams')
-    kinematics_configuration_index: int = Field(
-        None, serialization_alias='kinematicsConfigurationIndex')
-    line: Line = Field(
-        None, serialization_alias='line')
-
-
-class MoveLineStreamItem(BaseModel):
-    activity_type: ActivityType = Field(
-        ActivityType.MOVELINE, serialization_alias='activityType')
-    tag: int = Field(None)
-    move_line: MoveLineStreamConfig = Field(
-        None, serialization_alias='moveLine')
-
-
-class PauseProgramStreamItem(BaseModel):
-    activity_type: ActivityType = Field(
-        ActivityType.PAUSEPROGRAM, serialization_alias='activityType')
 
 
 # state machine for connection
@@ -278,10 +175,6 @@ class MachineCommand(BaseModel):
     control_word: ControlWord = Field(
         None, serialization_alias='controlWord'
     )
-
-
-class Stream(BaseModel):
-    stream: StreamConfig = Field(None)
 
 
 class Status(BaseModel):

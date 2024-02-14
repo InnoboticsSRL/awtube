@@ -17,10 +17,10 @@ from awtube.commands.machine_target import MachineTargetCommad
 
 from awtube.observers.status import StatusObserver
 
-from awtube.command_receiver import CommandReceiver
+from awtube.recievers.command_receiver import CommandReceiver
 from awtube.types.gbc import MachineTarget
 
-from awtube.cia402_machine import (transition,
+from awtube.cia402.cia402_machine import (transition,
                                    device_state)
 from awtube.logging import config
 
