@@ -23,7 +23,9 @@ from awtube.logging import config
 logging.getLogger("websockets.client").propagate = False
 
 
-class WebsocketThread(threading.Thread, CommandReceiver):
+class WebsocketThread(
+        # threading.Thread,
+        CommandReceiver):
     """ 
         Client for communicating on websockets
     """

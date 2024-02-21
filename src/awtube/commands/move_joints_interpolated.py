@@ -8,7 +8,7 @@ from awtube.commands.command import Command
 from awtube.recievers.command_receiver import CommandReceiver
 # from awtube.msg_builders import stream_move_joints_interpolated_cmd
 from awtube.types.aw import JointStates
-from awtube.messages.stream_builder import StreamBuilder
+from awtube.builders.stream_builder import StreamBuilder
 
 
 class MoveJointsInterpolatedCommand(Command):

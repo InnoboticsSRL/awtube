@@ -34,9 +34,15 @@ class MoveLineFunction(RobotFunction):
             rotation (tp.Dict[str, float]): Dict of rotation, a quaternion: x, y, z, w
             tag (int, optional): tag(id) with which to send the command to the robot. Defaults to 0.
         """
-        self._loop.run_until_complete(self.move_line_async(translation,
-                                                           rotation,
-                                                           tag))
+        # self._loop.run_until_complete(self.move_line_async(translation,
+        #                                                    rotation,
+        #                                                    tag))
+
+        futur = asyncio.run_coroutine_threadsafe(self.move_line_async(translation,
+                                                                      rotation,
+                                                                      tag),
+                                                 loop=self._loop)
+        return futur.result()
 
     async def move_line_async(self,
                               translation: tp.Dict[str, float],
@@ -55,13 +61,9 @@ class MoveLineFunction(RobotFunction):
             self._receiver, translation, rotation, tag)
         self._stream_commander.add_command(cmd)
 
-        # generator
         execution = self._stream_commander.execute_commands()
 
         print('wait async check')
-
-        # give it 1 sec to update stream_observer
-        # await asyncio.sleep(1)
 
         task = await anext(execution)
 

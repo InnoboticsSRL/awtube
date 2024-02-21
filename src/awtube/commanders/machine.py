@@ -203,7 +203,7 @@ class MachineCommander(Commander):
         else:
             self._target_done = True
 
-    async def execute_commands(self, wait_done: bool = False) -> None:
+    async def execute_commands(self) -> None:
         self._logger.debug('Started executing commands.')
         while True:
             await self.__internal_loop()

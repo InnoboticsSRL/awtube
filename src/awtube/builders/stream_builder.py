@@ -4,7 +4,7 @@
 
 from __future__ import annotations
 
-from awtube.messages.builder import Builder
+from awtube.builders.builder import Builder
 
 from awtube.types.gbc import ActivityType, PositionReference
 from awtube.types.aw import Pose, Position
@@ -123,8 +123,8 @@ class StreamBuilder(Builder):
                 "moveParams": move_params,
                 "kinematicsConfigurationIndex": kc,
                 "duration": 0.1,
-                "jointPositionArray": joint_position_array,
-                "jointVelocityArray": joint_velocity_array}
+                "jointPositionArray": list(joint_position_array),
+                "jointVelocityArray": list(joint_velocity_array)}
         })
         return self
 

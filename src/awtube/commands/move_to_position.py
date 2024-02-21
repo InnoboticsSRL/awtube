@@ -5,7 +5,7 @@
 from awtube.commands.command import Command
 from awtube.recievers.command_receiver import CommandReceiver
 from awtube.types.aw import Pose
-from awtube.messages.stream_builder import StreamBuilder
+from awtube.builders.stream_builder import StreamBuilder
 from awtube.types.gbc import PositionReference
 
 

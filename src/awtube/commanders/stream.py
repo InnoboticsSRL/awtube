@@ -52,24 +52,21 @@ class StreamCommander(Commander):
             #     return FunctionResult.SUCCESS
 
             if self._stream_observer.payload.tag == command.tag and self._stream_observer.payload.state == StreamState.IDLE:
+                # if no feedback for jobs with smaller tag finish them too
+                # if
                 print(
-                    f'done movement!!!!!!!: {self._stream_observer.payload.state}')
+                    f'done movement!!!!!!!: {self._stream_observer.payload.tag}')
+                # returning we finish the task
                 return FunctionResult.SUCCESS
-            # print(
-            #     f'executing with state: {self._stream_observer.payload.state}')
-            # print(
-            #     f'executing with task tag: {self._stream_observer.payload.tag}')
-            # print(
-            #     f'requested task tag: {command.tag}')
-            # print('--------------------------')
             await asyncio.sleep(0.2)
 
-    async def execute_commands(self, wait_done: bool = False) -> AsyncGenerator[asyncio.Task]:
+    async def execute_commands(self) -> AsyncGenerator[asyncio.Task]:
         """ Asyncio Generator which takes messages from object's queue and executes them, 
             respecting the capacity of the stream, which in the meantime yields asyncio.Task 
-            objects that represent the stream activities requested to GBC. """
+            objects that represent the stream activities requested to GBC. 
+        """
 
-        self._logger.debug('Started execution.')
+        self._logger.debug('Started execution of stream commands.')
 
         while True:
             if self._command_queue.empty():
@@ -79,7 +76,6 @@ class StreamCommander(Commander):
                 raise Exception("Couldn't update StreamObserver.")
 
             if not self._stream_observer.payload:
-                # if no feedback
                 self._stream_observer_tentatives += 1
                 await asyncio.sleep(0.1)
                 print('StreamObserver is None')
@@ -89,10 +85,11 @@ class StreamCommander(Commander):
 
             if self._stream_observer.payload.capacity >= self._capacity_min:
                 cmd: Command = self._command_queue.get(block=False)
-                self.__tag += 1
+
                 cmd.tag = copy.copy(self.__tag)
-                # send command to GBC and yield task
-                task = asyncio.create_task(self.wait_for_cmd_execution(cmd))
+                task: asyncio.Task = asyncio.create_task(
+                    self.wait_for_cmd_execution(cmd))
+                self.__tag += 1
                 yield task
                 await asyncio.sleep(0.02)
             else:

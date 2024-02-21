@@ -31,18 +31,19 @@ class MoveJointsInterpolatedFunction(RobotFunction):
             rotation (tp.Dict[str, float]): Dict of rotation, a quaternion: x, y, z, w
             tag (int, optional): tag(id) with which to send the command to the robot. Defaults to 0.
         """
-        loop = asyncio.get_event_loop()
+        # loop = asyncio.get_event_loop()
         asyncio_generator = self.move_joints_interpolated_async_gen(points)
 
-        async def exec(gen):
-            # await next task from generator
-            return await anext(gen)
+        async def execut():
+            next_task = await anext(asyncio_generator)
+            return await next_task
 
         while True:
             try:
-                result = loop.run_until_complete(
-                    exec(asyncio_generator))
-                yield result
+                # result = self._loop.call_soon_threadsafe(execut)
+                fut = asyncio.run_coroutine_threadsafe(
+                    execut(), loop=self._loop)
+                yield fut.result()
             except StopAsyncIteration:
                 break
 
@@ -57,7 +58,8 @@ class MoveJointsInterpolatedFunction(RobotFunction):
             self.move_joints_interpolated_async_gen(points))
 
     async def move_joints_interpolated_async_gen(self, points) -> AsyncIterator[asyncio.Task]:
-        """ Generator used to send a moveLine command to a CommandReceiver and recieve feedback on points done.
+        """ Generator used to send MoveJointsInterpolatedCommands to the reciever and yield 
+            asyncio.Tasks that give feedback on the execution of these commands.
         Args:
             translation (tp.Dict[str, float]): dict of translation x, y, z
             rotation (tp.Dict[str, float]): Dict of rotation, a quaternion: x, y, z, w
@@ -70,5 +72,5 @@ class MoveJointsInterpolatedFunction(RobotFunction):
                 joint_velocities=pt.velocities)
             self._stream_commander.add_command(cmd)
 
-        async for task in self._stream_commander.execute_commands(wait_done=True):
+        async for task in self._stream_commander.execute_commands():
             yield task

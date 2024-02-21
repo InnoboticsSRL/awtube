@@ -4,7 +4,7 @@
 
 from __future__ import annotations
 
-from awtube.messages.builder import Builder
+from awtube.builders.builder import Builder
 
 from awtube.types.gbc import ActivityType, PositionReference
 from awtube.types.aw import Pose, Position

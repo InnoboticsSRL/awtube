@@ -5,7 +5,7 @@
 
 from awtube.commands.command import Command
 from awtube.recievers.command_receiver import CommandReceiver
-from awtube.messages.command_builder import CommandBuilder
+from awtube.builders.command_builder import CommandBuilder
 
 
 class HeartbeatCommad(Command):

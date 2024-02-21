@@ -6,7 +6,7 @@ from awtube.commands import *
 from awtube.msg_builders import stream_move_joints_cmd, \
     stream_move_joints_interpolated_cmd, \
     stream_move_line_cmd
-from awtube.messages.stream_builder import StreamBuilder
+from awtube.builders.stream_builder import StreamBuilder
 
 """
   Tests for the module commands, testing the validity of the json commands generated.
