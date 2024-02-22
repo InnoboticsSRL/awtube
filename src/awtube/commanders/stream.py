@@ -33,7 +33,7 @@ class StreamCommander(Commander):
         self._stream_observer: StreamObserver = stream_observer
         self._command_queue: queue.Queue[Command] = queue.Queue()
         self._capacity_min: int = capacity_min
-        self.__tag = 0
+        self.__tag = None
 
         # stream observer None count
         self._stream_observer_tentatives = 0
@@ -54,8 +54,8 @@ class StreamCommander(Commander):
             if self._stream_observer.payload.tag == command.tag and self._stream_observer.payload.state == StreamState.IDLE:
                 # if no feedback for jobs with smaller tag finish them too
                 # if
-                print(
-                    f'done movement!!!!!!!: {self._stream_observer.payload.tag}')
+                # print(
+                #     f'done movement!!!!!!!: {self._stream_observer.payload.tag}')
                 # returning we finish the task
                 return FunctionResult.SUCCESS
             await asyncio.sleep(0.2)
@@ -81,6 +81,9 @@ class StreamCommander(Commander):
                 print('StreamObserver is None')
                 continue
             else:
+                # get last tag from motion controller
+                if not self.__tag:
+                    self.__tag = self._stream_observer.payload.tag
                 self._stream_observer_tentatives = 0
 
             if self._stream_observer.payload.capacity >= self._capacity_min:

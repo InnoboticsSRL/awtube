@@ -6,8 +6,18 @@ package_name = 'awtube'
 
 setup(
     name=package_name,
-    version='0.0.0',
-    packages=find_packages(exclude=['test']),
+    version='0.1.0',
+    packages=[
+        'awtube',
+        'awtube.recievers',
+        'awtube.builders',
+        'awtube.commanders',
+        'awtube.config',
+        'awtube.cia402',
+        'awtube.errors',
+        'awtube.logging',
+        'awtube.types',
+    ],
     data_files=[
         ('share/' + package_name, ['package.xml']),
         (os.path.join('share', package_name), glob(

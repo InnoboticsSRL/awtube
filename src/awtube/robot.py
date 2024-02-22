@@ -63,7 +63,7 @@ class Robot(
 
         self.killed: bool = False
 
-        self.executor = concurrent.futures.ThreadPoolExecutor()
+        # self.executor = concurrent.futures.ThreadPoolExecutor()
 
         # robot properties
         self._name = name

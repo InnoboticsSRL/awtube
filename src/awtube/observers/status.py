@@ -32,8 +32,9 @@ class StatusObserver(Observer):
             self._timestamp = time.time()
 
             # check reported errors and log
-            if self._payload.machine.operation_error != OperationError.NONE:
-                self._logger.error(self._payload.machine.operation_error)
+            # if self._payload.machine.operation_error != OperationError.NONE:
+            #     self._logger.error(self._payload.machine.operation_error)
+              
         except KeyError as ke:
             # this means message doesn't contain status
             pass

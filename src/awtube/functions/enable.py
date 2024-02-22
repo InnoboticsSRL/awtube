@@ -16,9 +16,9 @@ class EnableFunction(RobotFunction):
         self._machine_commander = machine_commander
         self._receiver = receiver
 
-    # not yet ready, because currently is reset is reduntant
+    # not yet ready, because currently reset
     # def reset(self) -> None:
-    #     """ Reset connection with GBC, commanding to go to SWITCHED_ON state. """
+    #     """ Reset faults with GBC, commanding to go to SWITCHED_ON state. """
     #     cmd = MachineStateCommad(self._receiver,
     #                              desired_state=CIA402MachineState.SWITCHED_ON)
     #     self._machine_commander.add_command(cmd)

@@ -3,6 +3,7 @@
 """ Defines the MoveLineFunction. """
 
 import asyncio
+import logging
 import typing as tp
 
 from awtube.types.gbc import StreamState
@@ -13,12 +14,15 @@ from awtube.recievers.command_receiver import CommandReceiver
 from awtube.commands import move_line
 from awtube.types.function_result import FunctionResult
 
+from awtube.logging import config
+
 
 class MoveLineFunction(RobotFunction):
     def __init__(self,
                  stream_commander: StreamCommander,
                  receiver: CommandReceiver,
                  loop: asyncio.AbstractEventLoop = None) -> None:
+        self._logger = logging.getLogger(self.__class__.__name__)
         self._stream_commander = stream_commander
         self._receiver = receiver
         self._loop = loop
@@ -34,10 +38,6 @@ class MoveLineFunction(RobotFunction):
             rotation (tp.Dict[str, float]): Dict of rotation, a quaternion: x, y, z, w
             tag (int, optional): tag(id) with which to send the command to the robot. Defaults to 0.
         """
-        # self._loop.run_until_complete(self.move_line_async(translation,
-        #                                                    rotation,
-        #                                                    tag))
-
         futur = asyncio.run_coroutine_threadsafe(self.move_line_async(translation,
                                                                       rotation,
                                                                       tag),
@@ -55,16 +55,14 @@ class MoveLineFunction(RobotFunction):
             rotation (tp.Dict[str, float]): Dict of rotation, a quaternion: x, y, z, w
             tag (int, optional): tag(id) with which to send the command to the robot. Defaults to 0.
         """
-        print('start async move_line')
+        self._logger.debug('Started moveLine.')
         # loop = asyncio.get_running_loop()
         cmd = move_line.MoveLineCommand(
             self._receiver, translation, rotation, tag)
         self._stream_commander.add_command(cmd)
-
         execution = self._stream_commander.execute_commands()
-
-        print('wait async check')
-
         task = await anext(execution)
+        result = await task
+        self._logger.debug('moveLine done with result: %s.', result)
 
-        return await task
+        return result
