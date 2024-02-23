@@ -1,8 +1,8 @@
 import pytest
 import asyncio
 import json
-from awtube.types.aw import *
-from awtube.types.gbc import *
+from awtube.types import *
+from awtube.types import *
 from awtube.commands import *
 from awtube.awtube import AWTube
 

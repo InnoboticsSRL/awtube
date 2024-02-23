@@ -1,5 +1,5 @@
 from awtube.robot import Robot
-from awtube.types.gbc import MachineTarget
+from awtube.types import MachineTarget
 import time
 
 a = Robot()

@@ -1,6 +1,6 @@
 import json
 import pytest
-from awtube.types.gbc import ActivityType
+from awtube.types import ActivityType
 from tests import awtube
 
 def test_create_class():

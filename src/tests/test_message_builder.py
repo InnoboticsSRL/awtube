@@ -1,12 +1,12 @@
 import pytest
 import json
-from awtube.types.aw import *
-from awtube.types.gbc import *
+from awtube.types import *
+from awtube.types import *
 from awtube.commands import *
-from awtube.msg_builders import stream_move_joints_cmd, \
-    stream_move_joints_interpolated_cmd, \
-    stream_move_line_cmd
-from awtube.builders.stream_builder import StreamBuilder
+# from awtube.msg_builders import stream_move_joints_cmd, \
+#     stream_move_joints_interpolated_cmd, \
+#     stream_move_line_cmd
+from awtube.builders import StreamBuilder
 
 """
   Tests for the module commands, testing the validity of the json commands generated.

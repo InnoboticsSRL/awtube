@@ -8,15 +8,7 @@ setup(
     name=package_name,
     version='0.1.0',
     packages=[
-        'awtube',
-        'awtube.recievers',
-        'awtube.builders',
-        'awtube.commanders',
-        'awtube.config',
-        'awtube.cia402',
-        'awtube.errors',
-        'awtube.logging',
-        'awtube.types',
+        'awtube'
     ],
     data_files=[
         ('share/' + package_name, ['package.xml']),

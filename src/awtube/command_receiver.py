@@ -1,22 +1,37 @@
 #!/usr/bin/env python3
 
-"""
-    WebsocketThread client class which implements the CommandReceiver Interface.
+""" Commanders of command pattern. """
 
-    Can be used to create a asynchronous websocket client in a separate thread.
-    The thread sends commands and updates the subscriber Observers asynchronously.
-"""
+from abc import ABC, abstractmethod
 import websockets
-import asyncio
-import queue
-import logging
-import threading
 from typing import Dict
+import logging
+import queue
+import asyncio
 
-from awtube.recievers.command_receiver import CommandReceiver
-from awtube.observers.observer import Observer
+import awtube.logging_config
 
-from awtube.logging import config
+from awtube.observers import Observer
+
+
+class CommandReceiver(ABC):
+    """
+    The Receiver classes contain some important business logic. They know how to
+    perform all kinds of operations, associated with carrying out a request. In
+    fact, any class may serve as a Receiver.
+    """
+    @abstractmethod
+    def put(self, message: str) -> None:
+        """ Put new command in queue for execution.
+
+        Args:
+            message : json str
+
+        Raises:
+            NotImplementedError:
+        """
+        raise NotImplementedError
+
 
 # disable websockets logging
 # TODO: improve, don't just disable
@@ -24,7 +39,6 @@ logging.getLogger("websockets.client").propagate = False
 
 
 class WebsocketThread(
-        # threading.Thread,
         CommandReceiver):
     """ 
         Client for communicating on websockets

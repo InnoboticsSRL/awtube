@@ -16,24 +16,13 @@ import logging
 import concurrent.futures
 import threading
 
-from awtube.recievers.command_receiver import CommandReceiver
-from awtube.commanders.stream import StreamCommander
-from awtube.commanders.machine import MachineCommander
+from awtube.command_receiver import CommandReceiver, WebsocketThread
+from awtube.commanders import StreamCommander, MachineCommander
+from awtube.observers import StreamObserver, TelemetryObserver, StatusObserver
+from awtube.robot_functions import MoveJointsInterpolatedFunction, MoveLineFunction, EnableFunction, MoveToPositioinFunction
+from awtube.types import MachineTarget
 
-from awtube.observers.stream import StreamObserver
-from awtube.observers.telemetry import TelemetryObserver
-from awtube.observers.status import StatusObserver
-
-from awtube.functions.move_joints_interpolated import MoveJointsInterpolatedFunction
-from awtube.functions.move_line import MoveLineFunction
-from awtube.functions.enable import EnableFunction
-from awtube.functions.move_to_position import MoveToPositioinFunction
-
-from awtube.recievers.websocket_thread import WebsocketThread
-
-from awtube.types.gbc import MachineTarget
-
-from awtube.logging import config
+import awtube.logging_config
 
 
 class Robot(

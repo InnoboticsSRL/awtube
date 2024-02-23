@@ -1,13 +1,127 @@
 #!/usr/bin/env python3
 
-""" Defines the StreamBuilder implementation of the Builder interface. """
+""" JSON message builders. """
 
 from __future__ import annotations
+from abc import ABC, abstractmethod
+from pydantic import BaseModel
 
-from awtube.builders.builder import Builder
+from awtube.types import ActivityType, PositionReference, Pose, MachineTarget
 
-from awtube.types.gbc import ActivityType, PositionReference
-from awtube.types.aw import Pose, Position
+
+class Builder(ABC, BaseModel):
+    """
+    The Builder interface specifies methods for creating the different parts of
+    the Message objects, which also is a pydantic BaseModel.
+    """
+
+    _build_warnings = False
+
+    @property
+    def build_warnings(self) -> bool:
+        """ Flag to activate warnings during build of json. """
+        return self._build_warnings
+
+    @build_warnings.setter
+    def build_warnings(self, val: bool) -> None:
+        """ Flag to activate warnings during build of json. """
+        self._build_warnings = val
+
+    @abstractmethod
+    def build(self) -> None:
+        raise NotImplementedError
+
+
+class CommandBuilder(Builder):
+    """
+    Builder for Stream Activity
+    """
+    # protected auto non-serialized
+    _kc: int = 0
+    _machine: int = 0
+    _machine_target: int = int(MachineTarget.SIMULATION)
+    _fro: float = 1.0
+
+    command: dict = None
+
+    def machine(self, val: int) -> CommandBuilder:
+        self._machine = val
+        return self
+
+    def reset(self) -> CommandBuilder:
+        """ Reset all fields of model to default values. """
+        self.command = None
+        self._kc = 0
+        self._machine = 0
+        self._machine_target: int = int(MachineTarget.SIMULATION)
+        self._fro: float = 1.0
+        return self
+
+    def build(self) -> str:
+        """ Return Stream model serialized in json. """
+        return self.model_dump_json(
+            warnings=self._build_warnings
+        )
+
+    def kinematics_configuration(self, value: int) -> CommandBuilder:
+        """ Set kinematics configuration id for message. """
+        self._kc = value
+        return self
+
+    def disable_limits(self, value: bool = False) -> CommandBuilder:
+        """ Add kinematics configuration command with disableLimits flag. """
+        self.command = {
+            "kinematicsConfiguration": {
+                f"{self._kc}": {
+                    "command": {
+                        "disableLimits": value
+                    }
+                }}}
+        return self
+
+    def heartbeat(self, value: int) -> CommandBuilder:
+        """ Add heartbeat command. """
+        self.command = {
+            "machine": {
+                f"{self._machine}": {
+                    "command": {
+                        "heartbeat": value
+                    }
+                }}}
+        return self
+
+    def desired_feedrate(self, value: float) -> CommandBuilder:
+        """ Add feedrate command. """
+        self.command = {
+            "kinematicsConfiguration": {
+                f"{self._kc}": {
+                    "command": {
+                        "fro": value
+                    }
+                }}}
+        return self
+
+    def machine_target(self, value: int) -> CommandBuilder:
+        """ Add machine target command. """
+        self.command = {
+            "kinematicsConfiguration": {
+                f"{self._machine}": {
+                    "command": {
+                        "target": int(value)
+                    }
+                }}}
+        return self
+
+    def control_word(self, value: int) -> CommandBuilder:
+        """ Add control word command. """
+        self.command = {
+            "machine": {
+                f"{self._machine}": {
+                    "command": {
+                        "controlWord": int(value)
+                    }
+                }}}
+        return self
 
 
 # TODO: study and implement move_params features
@@ -191,3 +305,49 @@ class StreamBuilder(Builder):
                     "configuration": 0
                 }}})
         return self
+
+
+# TODO:
+class ActivityBuilder(Builder):
+    """
+    Builder for Stream Activity
+    """
+    # protected auto non-serialized
+
+# def solo_activity_move_joints_cmd(
+#         joints: JointStates,
+#         stream_index: int = 0,
+#         tag: int = 0,
+#         kinematics_configuration_index: int = 0,
+#         debug: bool = False) -> str:
+#     """ Create activityMoveJoints json command """
+#     return json.dumps({
+#         "command": {
+#             "soloActivity": {
+#                 "0": {
+#                     "command": {
+#                         "tag": tag,
+#                         "activityType": 3,
+#                         "moveJoints": {
+#                             "jointPositionArray": list(joints.positions)
+#                         }
+#                     }
+#                 }
+#             }
+#         }
+#     })
+
+
+# def get_stream_pause_program(stream_index: int = 0, debug: bool = False) -> str:
+#     s = Stream(stream=StreamConfig(
+#         streamIndex=stream_index,
+#         enable_end_program=False,
+#         items=[
+#             PauseProgramStreamItem()
+#         ]
+#     )
+#     ).model_dump_json(by_alias=True)
+#     # TODO: log
+#     if debug:
+#         print(s)
+#     return s

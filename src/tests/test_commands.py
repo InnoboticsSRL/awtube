@@ -1,7 +1,7 @@
 import pytest
 import json
-from awtube.types.aw import *
-from awtube.types.gbc import *
+from awtube.types import *
+from awtube.types import *
 from awtube.commands import *
 from awtube.msg_builders import stream_move_joints_cmd, \
     stream_move_joints_interpolated_cmd, \
