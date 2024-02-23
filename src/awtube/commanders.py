@@ -72,6 +72,13 @@ class StreamCommander(Commander):
         """ Add commands to be sent """
         self._command_queue.put(command)
 
+    def add_command_at_beginning(self, command: Command) -> None:
+        """ 
+            Add commands to be sent before all others,
+            used for commands with higher priority.
+        """
+        self._command_queue.queue.appendleft(command)
+
     async def wait_for_cmd_execution(self, command: Command) -> FunctionResult:
         command.execute()
 
@@ -118,12 +125,16 @@ class StreamCommander(Commander):
             if self._stream_observer.payload.capacity >= self._capacity_min:
                 cmd: Command = self._command_queue.get(block=False)
 
+                self._logger.debug(type(cmd))
+
                 if isinstance(cmd, commands.StreamCommand):
+                    self._logger.debug('hello')
                     if cmd.command_type is types.StreamCommand.STOP:
                         # remove remaining stream items
                         self._command_queue.queue.clear()
+                        self._logger.debug(self._command_queue.queue)
                         break
-                      
+
                 cmd.tag = copy.copy(self.__tag)
                 task: asyncio.Task = asyncio.create_task(
                     self.wait_for_cmd_execution(cmd))

@@ -61,7 +61,7 @@ class StreamCommandFunction(RobotFunction):
     def __call_cmd(self, command: types.StreamCommand):
         cmd = commands.StreamCommand(self._receiver,
                                      command=command)
-        self._stream_commander.add_command(cmd)
+        self._stream_commander.add_command_at_beginning(cmd)
 
     def stop_stream(self) -> None:
         """ Stop stream. """
@@ -94,7 +94,6 @@ class MoveJointsInterpolatedFunction(RobotFunction):
             rotation (tp.Dict[str, float]): Dict of rotation, a quaternion: x, y, z, w
             tag (int, optional): tag(id) with which to send the command to the robot. Defaults to 0.
         """
-        # loop = asyncio.get_event_loop()
         asyncio_generator = self.move_joints_interpolated_async_gen(points)
 
         async def execut():
@@ -103,7 +102,6 @@ class MoveJointsInterpolatedFunction(RobotFunction):
 
         while True:
             try:
-                # result = self._loop.call_soon_threadsafe(execut)
                 fut = asyncio.run_coroutine_threadsafe(
                     execut(), loop=self._loop)
                 yield fut.result()
