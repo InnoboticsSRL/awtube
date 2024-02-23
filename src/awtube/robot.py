@@ -80,7 +80,7 @@ class Robot(
         # Commanders
         self.stream_commander = StreamCommander(self.stream_observer)
         self.machine_commander = MachineCommander(self.status_observer)
-        # TODO: fix, all commanders should have the same interface
+        # TODO: fix, all same type commanders should have the same interface
         self.machine_commander.receiver = self.receiver
 
         # Register observers
@@ -88,7 +88,7 @@ class Robot(
         self.receiver.attach_observer(self.stream_observer)
         self.receiver.attach_observer(self.status_observer)
 
-        # Define robot functions
+        # Define robot functions api
         robot_functions.MoveJointsInterpolatedFunction.__init__(self,
                                                                 self.stream_commander,
                                                                 self.receiver,
@@ -104,8 +104,8 @@ class Robot(
                                                 self.machine_commander,
                                                 self.receiver)
         robot_functions.StreamCommandFunction.__init__(self,
-                                               self.stream_commander,
-                                               self.receiver)
+                                                       self.stream_commander,
+                                                       self.receiver)
 
         # test
         self.machine_commander.limits_disabled = True
@@ -120,8 +120,7 @@ class Robot(
 
     def kill(self):
         """ Cancel tasks and stop loop from sync, threadsafe """
-        print("Inside KILL !!!!!!!")
-        self._logger.debug('Killed robot.')
+        self._logger.debug('Killing robot.')
         self.killed = True
         asyncio.run_coroutine_threadsafe(self.stop_loop(), self.loop)
 

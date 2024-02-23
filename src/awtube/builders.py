@@ -41,7 +41,6 @@ class StreamCommandBuilder(Builder):
     _machine: int = 0
     _machine_target: int = int(MachineTarget.SIMULATION)
     _fro: float = 1.0
-    _stream_id = 0
 
     command: dict = None
 

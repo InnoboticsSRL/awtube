@@ -122,8 +122,8 @@ class StreamCommander(Commander):
                     if cmd.command_type is types.StreamCommand.STOP:
                         # remove remaining stream items
                         self._command_queue.queue.clear()
-                        continue
-
+                        break
+                      
                 cmd.tag = copy.copy(self.__tag)
                 task: asyncio.Task = asyncio.create_task(
                     self.wait_for_cmd_execution(cmd))

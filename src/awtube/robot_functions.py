@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-""" Defines RobotFunction Interface used to implement different functions fo the robot. """
+""" Robot functions. """
 
 from abc import ABC
 import typing as tp
@@ -10,10 +10,10 @@ import asyncio
 import awtube.logging_config
 
 import awtube.types as types
-from awtube.types import Pose, Position, Quaternion, FunctionResult, StreamCommand
+import awtube.commands as commands
+from awtube.types import Pose, Position, Quaternion, FunctionResult
 from awtube.commanders import StreamCommander, MachineCommander
 import awtube.commands as commands
-from awtube.commands import MoveJointsInterpolatedCommand, MachineStateCommad, MoveToPositionCommand, StreamCommand
 from typing import Iterator, AsyncIterator
 from asyncio import AbstractEventLoop
 from awtube.cia402 import CIA402MachineState
@@ -21,7 +21,7 @@ from awtube.command_receiver import CommandReceiver
 
 
 class RobotFunction(ABC):
-    """ Interface for the robot functions """
+    """ RobotFunction Interface used to implement different functions fo the robot. """
     pass
 
 
@@ -32,17 +32,17 @@ class EnableFunction(RobotFunction):
         self._machine_commander = machine_commander
         self._receiver = receiver
 
-    # not yet ready, because currently reset
+    # not yet ready
     # def reset(self) -> None:
     #     """ Reset faults with GBC, commanding to go to SWITCHED_ON state. """
-    #     cmd = MachineStateCommad(self._receiver,
+    #     cmd = commands.MachineStateCommad(self._receiver,
     #                              desired_state=CIA402MachineState.SWITCHED_ON)
     #     self._machine_commander.add_command(cmd)
 
     def enable(self) -> None:
         """ Enable connection with GBC, commanding to go to OPERATION_ENABLED state. """
-        cmd = MachineStateCommad(self._receiver,
-                                 desired_state=CIA402MachineState.OPERATION_ENABLED)
+        cmd = commands.MachineStateCommad(self._receiver,
+                                          desired_state=CIA402MachineState.OPERATION_ENABLED)
         self._machine_commander.add_command(cmd)
 
 
@@ -129,7 +129,7 @@ class MoveJointsInterpolatedFunction(RobotFunction):
             tag (int, optional): tag(id) with which to send the command to the robot. Defaults to 0.
         """
         for pt in points:
-            cmd = MoveJointsInterpolatedCommand(
+            cmd = commands.MoveJointsInterpolatedCommand(
                 receiver=self._receiver,
                 joint_positions=pt.positions,
                 joint_velocities=pt.velocities)
@@ -179,7 +179,7 @@ class MoveLineFunction(RobotFunction):
         """
         self._logger.debug('Started moveLine.')
         # loop = asyncio.get_running_loop()
-        cmd = move_line.MoveLineCommand(
+        cmd = commands.MoveLineCommand(
             self._receiver, translation, rotation, tag)
         self._stream_commander.add_command(cmd)
         execution = self._stream_commander.execute_commands()
@@ -210,6 +210,6 @@ class MoveToPositioinFunction(RobotFunction):
         """
         pose = Pose(position=Position(**translation),
                     orientation=Quaternion(**rotation))
-        cmd = MoveToPositionCommand(self._receiver, pose, tag)
+        cmd = commands.MoveToPositionCommand(self._receiver, pose, tag)
         self._stream_commander.add_command(cmd)
         await self._stream_commander.execute_commands()

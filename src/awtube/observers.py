@@ -10,6 +10,7 @@ from typing import Any
 import logging
 
 from awtube.types import JointStates, StreamStatus, Status
+import awtube.errors as errors
 
 import awtube.logging_config
 
@@ -63,7 +64,7 @@ class StatusObserver(Observer):
             self._timestamp = time.time()
 
             # check reported errors and log
-            # if self._payload.machine.operation_error != OperationError.NONE:
+            # if self._payload.machine.operation_error != errors.OperationError.NONE:
             #     self._logger.error(self._payload.machine.operation_error)
 
         except KeyError as ke:
