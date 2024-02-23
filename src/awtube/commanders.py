@@ -69,7 +69,7 @@ class StreamCommander(Commander):
         self.__smooth_stop_requested = False
 
     def add_command(self, command: Command) -> None:
-        """ Add commands to be sent """
+        """ Add commands to be sent. """
         self._command_queue.put(command)
 
     def add_command_at_beginning(self, command: Command) -> None:
@@ -125,14 +125,10 @@ class StreamCommander(Commander):
             if self._stream_observer.payload.capacity >= self._capacity_min:
                 cmd: Command = self._command_queue.get(block=False)
 
-                self._logger.debug(type(cmd))
-
                 if isinstance(cmd, commands.StreamCommand):
-                    self._logger.debug('hello')
                     if cmd.command_type is types.StreamCommand.STOP:
                         # remove remaining stream items
                         self._command_queue.queue.clear()
-                        self._logger.debug(self._command_queue.queue)
                         break
 
                 cmd.tag = copy.copy(self.__tag)
