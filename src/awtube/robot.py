@@ -19,18 +19,20 @@ import threading
 from awtube.command_receiver import CommandReceiver, WebsocketThread
 from awtube.commanders import StreamCommander, MachineCommander
 from awtube.observers import StreamObserver, TelemetryObserver, StatusObserver
-from awtube.robot_functions import MoveJointsInterpolatedFunction, MoveLineFunction, EnableFunction, MoveToPositioinFunction
+import awtube.robot_functions as robot_functions
 from awtube.types import MachineTarget
 
 import awtube.logging_config
 
 
 class Robot(
-    threading.Thread,
-    MoveJointsInterpolatedFunction,
-    MoveLineFunction,
-    EnableFunction,
-        MoveToPositioinFunction):
+        threading.Thread,
+        robot_functions.MoveJointsInterpolatedFunction,
+        robot_functions.MoveLineFunction,
+        robot_functions.EnableFunction,
+        robot_functions.MoveToPositioinFunction,
+        robot_functions.StreamCommandFunction
+):
     """
         Class which puts everything together, commanders, observers and robot functions.
     """
@@ -87,20 +89,23 @@ class Robot(
         self.receiver.attach_observer(self.status_observer)
 
         # Define robot functions
-        MoveJointsInterpolatedFunction.__init__(self,
-                                                self.stream_commander,
-                                                self.receiver,
-                                                self.loop)
-        MoveLineFunction.__init__(self,
-                                  self.stream_commander,
-                                  self.receiver,
-                                  self.loop)
-        MoveToPositioinFunction.__init__(self,
-                                         self.stream_commander,
-                                         self.receiver)
-        EnableFunction.__init__(self,
-                                self.machine_commander,
-                                self.receiver)
+        robot_functions.MoveJointsInterpolatedFunction.__init__(self,
+                                                                self.stream_commander,
+                                                                self.receiver,
+                                                                self.loop)
+        robot_functions.MoveLineFunction.__init__(self,
+                                                  self.stream_commander,
+                                                  self.receiver,
+                                                  self.loop)
+        robot_functions.MoveToPositioinFunction.__init__(self,
+                                                         self.stream_commander,
+                                                         self.receiver)
+        robot_functions.EnableFunction.__init__(self,
+                                                self.machine_commander,
+                                                self.receiver)
+        robot_functions.StreamCommandFunction.__init__(self,
+                                               self.stream_commander,
+                                               self.receiver)
 
         # test
         self.machine_commander.limits_disabled = True

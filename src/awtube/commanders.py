@@ -14,19 +14,16 @@ from queue import Queue
 
 import awtube.logging_config
 
+import awtube.commands as commands
+import awtube.types as types
 from awtube.commands import Command, MachineStateCommad, HeartbeatCommad, \
     KinematicsConfigurationCommad, MachineTargetCommad
-
 from awtube.observers import StreamObserver, StatusObserver
 from awtube.types import StreamState
 from awtube.types import FunctionResult
-
-
 from awtube.command_receiver import CommandReceiver
 from awtube.types import MachineTarget
-
 from awtube.cia402 import transition, device_state
-# errors
 from awtube.errors import AwtubeError, AWTubeErrorException
 
 
@@ -67,6 +64,9 @@ class StreamCommander(Commander):
         # stream observer None count
         self._stream_observer_tentatives = 0
         self._stream_observer_max_tentatives = 10
+
+        # flag
+        self.__smooth_stop_requested = False
 
     def add_command(self, command: Command) -> None:
         """ Add commands to be sent """
@@ -117,6 +117,12 @@ class StreamCommander(Commander):
 
             if self._stream_observer.payload.capacity >= self._capacity_min:
                 cmd: Command = self._command_queue.get(block=False)
+
+                if isinstance(cmd, commands.StreamCommand):
+                    if cmd.command_type is types.StreamCommand.STOP:
+                        # remove remaining stream items
+                        self._command_queue.queue.clear()
+                        continue
 
                 cmd.tag = copy.copy(self.__tag)
                 task: asyncio.Task = asyncio.create_task(

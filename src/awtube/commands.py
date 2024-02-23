@@ -7,27 +7,29 @@ from abc import ABC, abstractmethod
 import typing as tp
 
 from awtube.types import PositionReference, Pose, Position, Quaternion, MachineTarget
-from awtube.builders import StreamBuilder, CommandBuilder
+from awtube.builders import StreamActivityBuilder, StreamCommandBuilder
 from awtube.types import JointStates
 from awtube.cia402 import CIA402MachineState
 from awtube.errors import AwtubeError, AWTubeErrorException
 from awtube.command_receiver import CommandReceiver
 
+# builders
+stream_activity_builder = StreamActivityBuilder()
+stream_command_builder = StreamCommandBuilder()
+
+# TODO: there's confusion between command and stream which also is a command
+
 
 class Command(ABC):
     """
-    The Command interface declares a coroutine for executing a command.
+        The Command interface declares a coroutine for executing a command.
     """
     tag = 0
     receiver = None
 
     @abstractmethod
     def execute(self) -> None:
-        """ Execute command
-
-        Raises:
-            NotImplementedError: _description_
-        """
+        """ Put command payload in receiver queue. """
         raise NotImplementedError
 
 
@@ -43,18 +45,18 @@ class HeartbeatCommad(Command):
         self._heartbeat = heartbeat
         self._machine = machine
         self._receiver = receiver
-        self.builder = CommandBuilder()
 
     def execute(self) -> None:
         """ Put command payload in receiver queue. """
-        msg = self.builder.reset().machine(
+        msg = stream_command_builder.reset().machine(
             self._machine).heartbeat(self._heartbeat).build()
         self._receiver.put(msg)
 
 
 class KinematicsConfigurationCommad(Command):
     """
-        Machine target command, basically it is used to use either the real physical machine or the simulation.
+        Machine target command, basically it is used to use 
+        either the real physical machine or the simulation.
     """
 
     def __init__(self,
@@ -66,7 +68,6 @@ class KinematicsConfigurationCommad(Command):
         self._target_feed_rate = target_feed_rate
         self._receiver = receiver
         self._kc_config = kc_config
-        self.builder = CommandBuilder()
 
     @property
     def disable_limits(self) -> bool:
@@ -91,14 +92,14 @@ class KinematicsConfigurationCommad(Command):
         self._target_feed_rate = value
 
     def execute(self) -> None:
-        """ Put command payload in receiver queue. """
         msg = None
         if self._disable_limits:
-            msg = self.builder.reset().disable_limits(self._disable_limits).build()
+            msg = stream_command_builder.reset().disable_limits(self._disable_limits).build()
             self._receiver.put(msg)
             return
         elif self._target_feed_rate:
-            msg = self.builder.reset().desired_feedrate(self._target_feed_rate).build()
+            msg = stream_command_builder.reset().desired_feedrate(
+                self._target_feed_rate).build()
             self._receiver.put(msg)
             return
 
@@ -116,7 +117,6 @@ class MachineStateCommad(Command):
         self._control_word = 0
         self._machine = machine
         self._receiver = receiver
-        self.builder = CommandBuilder()
 
     @property
     def desired_state(self) -> CIA402MachineState:
@@ -143,15 +143,15 @@ class MachineStateCommad(Command):
         return self.machine
 
     def execute(self) -> None:
-        """ Put command payload in receiver queue. """
-        msg = self.builder.reset().machine(self._machine).control_word(
+        msg = stream_command_builder.reset().machine(self._machine).control_word(
             self._control_word).build()
         self._receiver.put(msg)
 
 
 class MachineTargetCommad(Command):
     """
-        Machine target command, basically it is used to use either the real physical machine or the simulation.
+        Machine target command, basically it is used to use 
+        either the real physical machine or the simulation.
     """
 
     def __init__(self,
@@ -161,7 +161,6 @@ class MachineTargetCommad(Command):
         self._receiver = receiver
         self._machine = machine
         self._target = target
-        self.builder = CommandBuilder()
 
     @property
     def target(self) -> MachineTarget:
@@ -173,13 +172,9 @@ class MachineTargetCommad(Command):
         self._target = cw
 
     def execute(self) -> None:
-        """ Put command payload in receiver queue. """
-        msg = self.builder.reset().machine(
+        msg = stream_command_builder.reset().machine(
             self._machine).machine_target(self._target).build()
         self._receiver.put(msg)
-
-
-# from awtube.msg_builders import stream_move_joints_interpolated_cmd
 
 
 class MoveJointsInterpolatedCommand(Command):
@@ -198,16 +193,14 @@ class MoveJointsInterpolatedCommand(Command):
         self._receiver = receiver
         self.tag = tag
         self.kc = kc
-        self.builder = StreamBuilder()
 
     def execute(self) -> None:
-        """ Put command payload in receiver queue. """
-        msg = self.builder.reset().move_joints_interpolated(joint_position_array=self.joints.positions,
-                                                            joint_velocity_array=self.joints.velocities,
-                                                            tag=self.tag,
-                                                            kc=self.kc,
-                                                            move_params={}
-                                                            ).build()
+        msg = stream_activity_builder.reset().move_joints_interpolated(joint_position_array=self.joints.positions,
+                                                                       joint_velocity_array=self.joints.velocities,
+                                                                       tag=self.tag,
+                                                                       kc=self.kc,
+                                                                       move_params={}
+                                                                       ).build()
         self._receiver.put(msg)
 
 
@@ -225,15 +218,13 @@ class MoveJointsCommand(Command):
         self._receiver = receiver
         self.tag = tag
         self.kc = kc
-        self.builder = StreamBuilder()
 
     def execute(self) -> None:
-        """ Put command payload in receiver queue. """
-        msg = self.builder.reset().move_joints(joint_position_array=self.joints,
-                                               tag=self.tag,
-                                               kc=self.kc,
-                                               move_params={}
-                                               ).build()
+        msg = stream_activity_builder.reset().move_joints(joint_position_array=self.joints,
+                                                          tag=self.tag,
+                                                          kc=self.kc,
+                                                          move_params={}
+                                                          ).build()
         self._receiver.put(msg)
 
 
@@ -253,15 +244,13 @@ class MoveLineCommand(Command):
         self._receiver = receiver
         self.tag = tag
         self.kc = kc
-        self.builder = StreamBuilder()
 
     def execute(self) -> None:
-        """ Put command payload in receiver queue. """
-        msg = self.builder.reset().move_line(pose=self.pose,
-                                             tag=self.tag,
-                                             kc=self.kc,
-                                             move_params={}
-                                             ).build()
+        msg = stream_activity_builder.reset().move_line(pose=self.pose,
+                                                        tag=self.tag,
+                                                        kc=self.kc,
+                                                        move_params={}
+                                                        ).build()
         self._receiver.put(msg)
 
 
@@ -281,13 +270,35 @@ class MoveToPositionCommand(Command):
         self.pose = pose
         self.kc = kc
         self.position_reference = position_reference
-        self.builder = StreamBuilder()
 
     def execute(self) -> None:
-        """ Put command payload in receiver queue. """
-        msg = self.builder.reset().move_to_position(pose=self.pose,
-                                                    tag=self.tag,
-                                                    kc=self.kc,
-                                                    move_params={},
-                                                    position_reference=self.position_reference).build()
+        msg = stream_activity_builder.reset().move_to_position(pose=self.pose,
+                                                               tag=self.tag,
+                                                               kc=self.kc,
+                                                               move_params={},
+                                                               position_reference=self.position_reference).build()
+        self._receiver.put(msg)
+
+
+class StreamCommand(Command):
+    """
+        Stream command.
+    """
+
+    def __init__(self,
+                 receiver: CommandReceiver,
+                 command: StreamCommand) -> None:
+        self._cmd = command
+        self._receiver = receiver
+
+    @property
+    def command_type(self) -> StreamCommand:
+        return self._cmd
+
+    @command_type.setter
+    def command_type(self, value: StreamCommand) -> None:
+        self._cmd = value
+
+    def execute(self) -> None:
+        msg = stream_command_builder.reset().stream_command(self._cmd).build()
         self._receiver.put(msg)

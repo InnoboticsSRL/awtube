@@ -6,7 +6,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from pydantic import BaseModel
 
-from awtube.types import ActivityType, PositionReference, Pose, MachineTarget
+from awtube.types import ActivityType, PositionReference, Pose, MachineTarget, StreamCommand
 
 
 class Builder(ABC, BaseModel):
@@ -32,7 +32,7 @@ class Builder(ABC, BaseModel):
         raise NotImplementedError
 
 
-class CommandBuilder(Builder):
+class StreamCommandBuilder(Builder):
     """
     Builder for Stream Activity
     """
@@ -41,14 +41,15 @@ class CommandBuilder(Builder):
     _machine: int = 0
     _machine_target: int = int(MachineTarget.SIMULATION)
     _fro: float = 1.0
+    _stream_id = 0
 
     command: dict = None
 
-    def machine(self, val: int) -> CommandBuilder:
+    def machine(self, val: int) -> StreamCommandBuilder:
         self._machine = val
         return self
 
-    def reset(self) -> CommandBuilder:
+    def reset(self) -> StreamCommandBuilder:
         """ Reset all fields of model to default values. """
         self.command = None
         self._kc = 0
@@ -63,12 +64,12 @@ class CommandBuilder(Builder):
             warnings=self._build_warnings
         )
 
-    def kinematics_configuration(self, value: int) -> CommandBuilder:
+    def kinematics_configuration(self, value: int) -> StreamCommandBuilder:
         """ Set kinematics configuration id for message. """
         self._kc = value
         return self
 
-    def disable_limits(self, value: bool = False) -> CommandBuilder:
+    def disable_limits(self, value: bool = False) -> StreamCommandBuilder:
         """ Add kinematics configuration command with disableLimits flag. """
         self.command = {
             "kinematicsConfiguration": {
@@ -79,7 +80,7 @@ class CommandBuilder(Builder):
                 }}}
         return self
 
-    def heartbeat(self, value: int) -> CommandBuilder:
+    def heartbeat(self, value: int) -> StreamCommandBuilder:
         """ Add heartbeat command. """
         self.command = {
             "machine": {
@@ -90,7 +91,7 @@ class CommandBuilder(Builder):
                 }}}
         return self
 
-    def desired_feedrate(self, value: float) -> CommandBuilder:
+    def desired_feedrate(self, value: float) -> StreamCommandBuilder:
         """ Add feedrate command. """
         self.command = {
             "kinematicsConfiguration": {
@@ -101,7 +102,15 @@ class CommandBuilder(Builder):
                 }}}
         return self
 
-    def machine_target(self, value: int) -> CommandBuilder:
+    def stream_command(self, value: StreamCommand) -> StreamCommandBuilder:
+        """  Stream command. """
+        self.command = {"stream": {
+            "0": {
+                "command": {
+                    "streamCommand": int(value)}}}}
+        return self
+
+    def machine_target(self, value: int) -> StreamCommandBuilder:
         """ Add machine target command. """
         self.command = {
             "kinematicsConfiguration": {
@@ -112,7 +121,7 @@ class CommandBuilder(Builder):
                 }}}
         return self
 
-    def control_word(self, value: int) -> CommandBuilder:
+    def control_word(self, value: int) -> StreamCommandBuilder:
         """ Add control word command. """
         self.command = {
             "machine": {
@@ -143,7 +152,7 @@ class CommandBuilder(Builder):
 #     vmax_percentage: float = Field(None, alias='vmaxPercentage')
 
 
-class StreamBuilder(Builder):
+class StreamActivityBuilder(Builder):
     """
     Builder for Stream Activity
     """
@@ -162,7 +171,7 @@ class StreamBuilder(Builder):
     def items(self, val) -> None:
         self._items = val
 
-    def reset(self) -> StreamBuilder:
+    def reset(self) -> StreamActivityBuilder:
         """ Reset all fields of model to default values. """
         self._items = []
         self._stream_index = 0
@@ -181,12 +190,12 @@ class StreamBuilder(Builder):
             warnings=self._build_warnings
         )
 
-    def enable_end_program(self, enable: bool) -> StreamBuilder:
+    def enable_end_program(self, enable: bool) -> StreamActivityBuilder:
         """ Set enableEndProgram flag. """
         self._enable_end_program = enable
         return self
 
-    def stream_index(self, val: int) -> StreamBuilder:
+    def stream_index(self, val: int) -> StreamActivityBuilder:
         """ Set streamIndex flag. """
         self._stream_index = val
         return self
@@ -195,7 +204,7 @@ class StreamBuilder(Builder):
                     joint_position_array: list,
                     tag: int,
                     kc: int,
-                    move_params: dict) -> StreamBuilder:
+                    move_params: dict) -> StreamActivityBuilder:
         """ Add a move joints item to the stream activity. """
         self._items.append({
             "activityType": int(ActivityType.MOVEJOINTS),
@@ -211,7 +220,7 @@ class StreamBuilder(Builder):
                                 joint_velocity_array: list,
                                 tag: int,
                                 kc: int,
-                                move_params: dict) -> StreamBuilder:
+                                move_params: dict) -> StreamActivityBuilder:
         """ Add a move joints at velocity item to the stream activity. """
         self._items.append({
             "activityType": int(ActivityType.MOVEJOINTSATVELOCITY),
@@ -228,7 +237,7 @@ class StreamBuilder(Builder):
                                  joint_velocity_array: list,
                                  tag: int,
                                  kc: int,
-                                 move_params: dict) -> StreamBuilder:
+                                 move_params: dict) -> StreamActivityBuilder:
         """ Add a moveJointsInterpolated item to the stream activity. """
         self._items.append({
             "activityType": int(ActivityType.MOVEJOINTSINTERPOLATED),
@@ -246,7 +255,7 @@ class StreamBuilder(Builder):
                   pose: Pose,
                   tag: int,
                   kc: int,
-                  move_params: dict) -> StreamBuilder:
+                  move_params: dict) -> StreamActivityBuilder:
         """ Add a moveLine item to the stream activity. """
         self._items.append({
             "activityType": int(ActivityType.MOVELINE),
@@ -274,7 +283,7 @@ class StreamBuilder(Builder):
                          tag: int,
                          kc: int,
                          move_params: dict,
-                         position_reference: PositionReference) -> StreamBuilder:
+                         position_reference: PositionReference) -> StreamActivityBuilder:
         """ Add a moveLine item to the stream activity. """
         self._items.append({
             "activityType": int(ActivityType.MOVETOPOSITION),

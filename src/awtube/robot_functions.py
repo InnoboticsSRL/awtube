@@ -9,9 +9,11 @@ import asyncio
 
 import awtube.logging_config
 
-from awtube.types import Pose, Position, Quaternion, FunctionResult
+import awtube.types as types
+from awtube.types import Pose, Position, Quaternion, FunctionResult, StreamCommand
 from awtube.commanders import StreamCommander, MachineCommander
-from awtube.commands import MoveJointsInterpolatedCommand, MachineStateCommad, MoveToPositionCommand
+import awtube.commands as commands
+from awtube.commands import MoveJointsInterpolatedCommand, MachineStateCommad, MoveToPositionCommand, StreamCommand
 from typing import Iterator, AsyncIterator
 from asyncio import AbstractEventLoop
 from awtube.cia402 import CIA402MachineState
@@ -42,6 +44,36 @@ class EnableFunction(RobotFunction):
         cmd = MachineStateCommad(self._receiver,
                                  desired_state=CIA402MachineState.OPERATION_ENABLED)
         self._machine_commander.add_command(cmd)
+
+
+class StreamCommandFunction(RobotFunction):
+    """ 
+        Stream functions, enable, stop, pause and run.
+        Stop and pause force the feedrate to 0.
+    """
+
+    def __init__(self,
+                 stream_commander: StreamCommander,
+                 receiver: CommandReceiver) -> None:
+        self._stream_commander = stream_commander
+        self._receiver = receiver
+
+    def __call_cmd(self, command: types.StreamCommand):
+        cmd = commands.StreamCommand(self._receiver,
+                                     command=command)
+        self._stream_commander.add_command(cmd)
+
+    def stop_stream(self) -> None:
+        """ Stop stream. """
+        self.__call_cmd(types.StreamCommand.STOP)
+
+    def pause_stream(self) -> None:
+        """ Pause stream. """
+        self.__call_cmd(types.StreamCommand.PAUSE)
+
+    def run_stream(self) -> None:
+        """ Run stream. """
+        self.__call_cmd(types.StreamCommand.RUN)
 
 
 class MoveJointsInterpolatedFunction(RobotFunction):

@@ -44,7 +44,11 @@ class WebsocketThread(
         Client for communicating on websockets
     """
 
-    def __init__(self, url: str, headers: Dict[str, str] = None, freq: int = 100, event_loop: asyncio.AbstractEventLoop = None):
+    def __init__(self,
+                 url: str,
+                 headers: Dict[str, str] = None,
+                 freq: int = 100,
+                 event_loop: asyncio.AbstractEventLoop = None):
         """
         Args:
             url: Websocket url to connect to.
@@ -62,7 +66,8 @@ class WebsocketThread(
 
         self.loop: asyncio.AbstractEventLoop = event_loop
         self.killed: bool = False
-        self.outgoing = queue.Queue()
+        self.outgoing = queue.Queue(maxsize=10)
+        # self.outgoing = queue.Queue()
         # coroutines to be run asynchronously later they get the websocket as argument
         self._tasks = [self.listen_queue, self.listen_socket]
         self._observers = []
@@ -92,8 +97,8 @@ class WebsocketThread(
         try:
             async with websockets.connect(self.url, extra_headers=self.headers) as socket:
                 # gather all tasks defined in self._tasks
-                # await asyncio.gather(*(task(socket) for task in self._tasks), return_exceptions=True)
-                await asyncio.gather(*(task(socket) for task in self._tasks))
+                await asyncio.gather(*(task(socket) for task in self._tasks), return_exceptions=True)
+                # await asyncio.gather(*(task(socket) for task in self._tasks))
         except ConnectionRefusedError:
             self._logger.error('Connection refused!')
 

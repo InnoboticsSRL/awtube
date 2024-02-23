@@ -6,7 +6,7 @@ from awtube.commands import *
 # from awtube.msg_builders import stream_move_joints_cmd, \
 #     stream_move_joints_interpolated_cmd, \
 #     stream_move_line_cmd
-from awtube.builders import StreamBuilder
+from awtube.builders import StreamActivityBuilder
 
 """
   Tests for the module commands, testing the validity of the json commands generated.
@@ -23,7 +23,7 @@ class TestCommands:
     kc = 2
     s_idx = 0
 
-    builder: StreamBuilder = StreamBuilder()
+    builder: StreamActivityBuilder = StreamActivityBuilder()
 
     def test_stream_move_joints_cmd(self):
         correct = {"stream":
