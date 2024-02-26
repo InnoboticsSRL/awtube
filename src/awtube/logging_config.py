@@ -25,7 +25,7 @@ LOGGING = {
             "formatter": "json",
         }
     },
-    "loggers": {"": {"handlers": ["stdout"], "level": "ERROR"}},
+    "loggers": {"": {"handlers": ["stdout"], "level": "DEBUG"}},
 }
 
 
