@@ -117,27 +117,28 @@ class TelemetryObserver(Observer):
         try:
             js = json.loads(message)
             # TODO: stream array id ??????
-            self._payload = {
-                'set': JointStates(
-                    positions=[joint_i['p']
-                               for joint_i in js['telemetry'][-1]['set']],
-                    velocities=[joint_i['v']
-                                for joint_i in js['telemetry'][-1]['set']],
-                    accelerations=[joint_i['a']
+            if js['telemetry']:
+                self._payload = {
+                    'set': JointStates(
+                        positions=[joint_i['p']
                                    for joint_i in js['telemetry'][-1]['set']],
-                    torques=[joint_i['t'] for joint_i in js['telemetry'][-1]['set']]),
-                'actual': JointStates(
-                    positions=[joint_i['p']
-                               for joint_i in js['telemetry'][-1]['act']],
-                    velocities=[joint_i['v']
-                                for joint_i in js['telemetry'][-1]['act']],
-                    accelerations=[joint_i['a']
+                        velocities=[joint_i['v']
+                                    for joint_i in js['telemetry'][-1]['set']],
+                        accelerations=[joint_i['a']
+                                       for joint_i in js['telemetry'][-1]['set']],
+                        torques=[joint_i['t'] for joint_i in js['telemetry'][-1]['set']]),
+                    'actual': JointStates(
+                        positions=[joint_i['p']
                                    for joint_i in js['telemetry'][-1]['act']],
-                    torques=[joint_i['t'] for joint_i in js['telemetry'][-1]['act']])
-            }
+                        velocities=[joint_i['v']
+                                    for joint_i in js['telemetry'][-1]['act']],
+                        accelerations=[joint_i['a']
+                                       for joint_i in js['telemetry'][-1]['act']],
+                        torques=[joint_i['t'] for joint_i in js['telemetry'][-1]['act']])
+                }
 
-            # record timestamp
-            self._timestamp = time.time()
+                # record timestamp
+                self._timestamp = time.time()
 
         except KeyError as ke:
             # this means message doesn't contain telemetry

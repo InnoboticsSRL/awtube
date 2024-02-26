@@ -112,6 +112,18 @@ class Robot(
         self.machine_commander.velocity = 2
         self.machine_commander.target = MachineTarget.SIMULATION
 
+  
+    # def __enter__(self):
+    #     """ Context manager for running the websocket """
+    #     self.start()
+    #     return self
+
+    # def __exit__(self, *_):
+    #     """ Context manager for cleaning up event loop and thread """
+    #     if not self.killed:
+    #         self.kill()
+    #     self.join()
+
     def run(self):
         """ Main execution of the thread. Is called when entering context """
         self.loop.create_task(self.receiver.listen())
@@ -136,6 +148,7 @@ class Robot(
 
         await asyncio.gather(*tasks, return_exceptions=True)
         self.loop.stop()
+        # self.join()
 
     async def startup_async(self) -> None:
         """ Start the whole process of listening and commanding. """

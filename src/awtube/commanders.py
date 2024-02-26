@@ -83,16 +83,7 @@ class StreamCommander(Commander):
         command.execute()
 
         while True:
-            # if self._stream_observer.payload.tag > command.tag:
-            #     # means we finished task too fast to recieve feedback
-            #     return FunctionResult.SUCCESS
-
             if self._stream_observer.payload.tag == command.tag and self._stream_observer.payload.state == StreamState.IDLE:
-                # if no feedback for jobs with smaller tag finish them too
-                # if
-                # print(
-                #     f'done movement!!!!!!!: {self._stream_observer.payload.tag}')
-                # returning we finish the task
                 return FunctionResult.SUCCESS
             await asyncio.sleep(0.2)
 
@@ -271,7 +262,7 @@ class MachineCommander(Commander):
             if cia402_state == self._current_cmd.desired_state:
                 self._logger.debug('New CIA402 state: %s.', cia402_state.value)
                 self._executing_cia402_command = False
-                return
+                return 
 
             # every iteration send command
             next_cw = transition(
