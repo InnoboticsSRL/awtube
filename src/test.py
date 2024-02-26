@@ -15,7 +15,7 @@ time.sleep(5)
 try:
     for i in range(1000):
 
-        print(f'Loop {i}')
+        print(f'Iteration: {i}')
 
         a.move_line(
             {"x": 400,
@@ -71,7 +71,6 @@ try:
              "w": 5.3028761936245346e-17})
 finally:
     a.kill()
-
     print('Finish')
 
 

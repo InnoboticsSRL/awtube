@@ -112,7 +112,6 @@ class Robot(
         self.machine_commander.velocity = 2
         self.machine_commander.target = MachineTarget.SIMULATION
 
-  
     # def __enter__(self):
     #     """ Context manager for running the websocket """
     #     self.start()

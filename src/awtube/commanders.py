@@ -65,9 +65,6 @@ class StreamCommander(Commander):
         self._stream_observer_tentatives = 0
         self._stream_observer_max_tentatives = 10
 
-        # flag
-        self.__smooth_stop_requested = False
-
     def add_command(self, command: Command) -> None:
         """ Add commands to be sent. """
         self._command_queue.put(command)
@@ -262,7 +259,7 @@ class MachineCommander(Commander):
             if cia402_state == self._current_cmd.desired_state:
                 self._logger.debug('New CIA402 state: %s.', cia402_state.value)
                 self._executing_cia402_command = False
-                return 
+                return
 
             # every iteration send command
             next_cw = transition(
