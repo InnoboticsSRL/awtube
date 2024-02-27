@@ -10,8 +10,6 @@ a.target = MachineTarget.SIMULATION
 
 a.start()
 
-time.sleep(5)
-
 try:
     for i in range(1000):
 
@@ -26,7 +24,7 @@ try:
              "z": 0.49999999999999994,
              "w": 5.3028761936245346e-17})
 
-        a.machine_commander.velocity = 2
+        # a.machine_commander.velocity = 2
 
         a.move_line(
             {"x": 400,

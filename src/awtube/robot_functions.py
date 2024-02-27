@@ -6,6 +6,7 @@ from abc import ABC
 import typing as tp
 import logging
 import asyncio
+import time
 
 import awtube.logging_config
 
@@ -19,6 +20,9 @@ from asyncio import AbstractEventLoop
 from awtube.cia402 import CIA402MachineState
 from awtube.command_receiver import CommandReceiver
 
+import awtube.controllers as controllers
+import awtube.commands as commands
+
 
 class RobotFunction(ABC):
     """ RobotFunction Interface used to implement different functions fo the robot. """
@@ -28,9 +32,13 @@ class RobotFunction(ABC):
 class EnableFunction(RobotFunction):
     """ Enable connection with GBC. """
 
-    def __init__(self, machine_commander: MachineCommander, receiver: CommandReceiver) -> None:
-        self._machine_commander = machine_commander
+    def __init__(self,
+                 machine_controller: controllers.MachineController,
+                 receiver: CommandReceiver,
+                 loop: AbstractEventLoop) -> None:
+        self._machine_controller = machine_controller
         self._receiver = receiver
+        self._loop = loop
 
     # not yet ready
     # def reset(self) -> None:
@@ -41,9 +49,24 @@ class EnableFunction(RobotFunction):
 
     def enable(self) -> None:
         """ Enable connection with GBC, commanding to go to OPERATION_ENABLED state. """
-        cmd = commands.MachineStateCommad(self._receiver,
-                                          desired_state=CIA402MachineState.OPERATION_ENABLED)
-        self._machine_commander.add_command(cmd)
+        ht_task = self._machine_controller.schedule_first(
+            commands.HeartbeatCommad(self._receiver, 0))
+        cia402_task = self._machine_controller.schedule_last(commands.MachineStateCommad(self._receiver,
+                                                                                         desired_state=CIA402MachineState.OPERATION_ENABLED))
+        # asyncio.run_coroutine_threadsafe(
+        #     self._machine_controller.execute_commands(), loop=self._loop)
+        # asyncio.ensure_future(
+        #     coro_or_future=self._machine_controller.execute_commands(), loop=self._loop)
+
+        # asyncio.run_coroutine_threadsafe(
+        #     ht_task.start(), loop=self._loop)
+
+        self._loop.run_until_complete(
+            cia402_task.start(await_task=True))
+
+        print('enable finished')
+
+        # return cia402_task.task.wait()
 
 
 class StreamCommandFunction(RobotFunction):

@@ -22,6 +22,10 @@ from awtube.observers import StreamObserver, TelemetryObserver, StatusObserver
 import awtube.robot_functions as robot_functions
 from awtube.types import MachineTarget
 
+import awtube.commands as commands
+
+import awtube.controllers as controllers
+
 import awtube.logging_config
 
 
@@ -79,9 +83,11 @@ class Robot(
 
         # Commanders
         self.stream_commander = StreamCommander(self.stream_observer)
-        self.machine_commander = MachineCommander(self.status_observer)
+        # self.machine_commander = MachineCommander(self.status_observer)
+        self.machine_controller = controllers.MachineController(
+            self.status_observer)
         # TODO: fix, all same type commanders should have the same interface
-        self.machine_commander.receiver = self.receiver
+        self.machine_controller.receiver = self.receiver
 
         # Register observers
         self.receiver.attach_observer(self.telemetry_observer)
@@ -101,16 +107,17 @@ class Robot(
                                                          self.stream_commander,
                                                          self.receiver)
         robot_functions.EnableFunction.__init__(self,
-                                                self.machine_commander,
-                                                self.receiver)
+                                                self.machine_controller,
+                                                self.receiver,
+                                                self.loop)
         robot_functions.StreamCommandFunction.__init__(self,
                                                        self.stream_commander,
                                                        self.receiver)
 
         # test
-        self.machine_commander.limits_disabled = True
-        self.machine_commander.velocity = 2
-        self.machine_commander.target = MachineTarget.SIMULATION
+        # self.machine_commander.limits_disabled = True
+        # self.machine_commander.velocity = 2
+        # self.machine_commander.target = MachineTarget.SIMULATION
 
     # def __enter__(self):
     #     """ Context manager for running the websocket """
@@ -126,7 +133,7 @@ class Robot(
     def run(self):
         """ Main execution of the thread. Is called when entering context """
         self.loop.create_task(self.receiver.listen())
-        self.loop.create_task(self.machine_commander.execute_commands())
+        # self.loop.create_task(self.machine_controller.execute_commands())
         self.loop.run_forever()
 
     def kill(self):
@@ -151,7 +158,7 @@ class Robot(
 
     async def startup_async(self) -> None:
         """ Start the whole process of listening and commanding. """
-        await asyncio.gather(self.receiver.listen(), self.machine_commander.execute_commands())
+        await asyncio.gather(self.receiver.listen())
 
     def startup(self) -> bool:
         """
