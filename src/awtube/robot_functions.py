@@ -3,6 +3,7 @@
 """ Robot functions. """
 
 from abc import ABC
+from re import L
 import typing as tp
 import logging
 import asyncio
@@ -49,24 +50,29 @@ class EnableFunction(RobotFunction):
 
     def enable(self) -> None:
         """ Enable connection with GBC, commanding to go to OPERATION_ENABLED state. """
+        # task = asyncio.run_coroutine_threadsafe(
+        #     self.enable_async(), loop=self._loop)
+        res = self._loop.run_until_complete(self.enable_async())
+        # fut.result()
+        # done, pending = asyncio.wait(
+        #     self._machine_controller.tasks, timeout=30)
+        # if task in done:
+        print(f'enable finished with result: {res}')
+
+    async def enable_async(self) -> None:
+        """ Enable connection with GBC, commanding to go to OPERATION_ENABLED state. """
         ht_task = self._machine_controller.schedule_first(
             commands.HeartbeatCommad(self._receiver, 0))
         cia402_task = self._machine_controller.schedule_last(commands.MachineStateCommad(self._receiver,
                                                                                          desired_state=CIA402MachineState.OPERATION_ENABLED))
-        # asyncio.run_coroutine_threadsafe(
-        #     self._machine_controller.execute_commands(), loop=self._loop)
+        asyncio.run_coroutine_threadsafe(
+            self._machine_controller.execute_commands(), loop=self._loop)
         # asyncio.ensure_future(
         #     coro_or_future=self._machine_controller.execute_commands(), loop=self._loop)
 
-        # asyncio.run_coroutine_threadsafe(
-        #     ht_task.start(), loop=self._loop)
+        # await ht_task.start()
 
-        self._loop.run_until_complete(
-            cia402_task.start(await_task=True))
-
-        print('enable finished')
-
-        # return cia402_task.task.wait()
+        await cia402_task.start()
 
 
 class StreamCommandFunction(RobotFunction):

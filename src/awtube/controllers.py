@@ -51,13 +51,11 @@ class PeriodicTask(ControllerTask):
         self.is_started = False
         self.task = None
 
-    async def start(self, await_task=False):
+    async def start(self):
         """ Start task to call coro """
         if not self.is_started:
             self.is_started = True
-            self.task = asyncio.ensure_future(self._run())
-        if await_task:
-            await self.task
+            self.task = asyncio.create_task(self._run())
 
     async def stop(self):
         """ Stop task and await it stopped """
@@ -109,6 +107,7 @@ class Controller(ABC):
     _command_queue = queue.Queue()
     _observer = None
     _reciever = None
+    tasks = set()
 
     @abstractmethod
     def _get_task(self, command) -> None | ControllerTask:
@@ -176,6 +175,9 @@ class MachineController(Controller):
     async def _heartbeat(self, cmd: None | commands.HeartbeatCommad) -> None | TaskResult:
         if not self.heartbeat_cmd:
             self.heartbeat_cmd = cmd
+        if not self._observer.payload:
+            self._logger.debug('Observer not yet updated!')
+            return TaskResult.RUNNING
 
         if not self.last_heartbeat_time:
             self.last_heartbeat_time = time.time()
@@ -223,6 +225,7 @@ class MachineController(Controller):
             cmd, task = self._command_queue.get(block=False)
 
             await task.start()
+            self.tasks.add(task)
 
 
 # class StreamController(Controller):

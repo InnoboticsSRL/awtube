@@ -10,6 +10,8 @@ a.target = MachineTarget.SIMULATION
 
 a.start()
 
+time.sleep(5)
+
 try:
     for i in range(1000):
 
