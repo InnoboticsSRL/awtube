@@ -8,6 +8,7 @@ import typing as tp
 import logging
 import asyncio
 import time
+from unittest import async_case
 
 import awtube.logging_config
 
@@ -48,31 +49,27 @@ class EnableFunction(RobotFunction):
     #                              desired_state=CIA402MachineState.SWITCHED_ON)
     #     self._machine_commander.add_command(cmd)
 
+    def start_heartbeat(self) -> None:
+        """ Start sending heartbeat messages to motion controller. """
+        ht_task = self._machine_controller.schedule_first(
+            commands.HeartbeatCommad(self._receiver, 0))
+
     def enable(self) -> None:
         """ Enable connection with GBC, commanding to go to OPERATION_ENABLED state. """
-        # task = asyncio.run_coroutine_threadsafe(
+        # res = self._loop.run_until_complete(self.enable_async())
+        # fut = asyncio.run_coroutine_threadsafe(
         #     self.enable_async(), loop=self._loop)
-        res = self._loop.run_until_complete(self.enable_async())
-        # fut.result()
-        # done, pending = asyncio.wait(
-        #     self._machine_controller.tasks, timeout=30)
-        # if task in done:
-        print(f'enable finished with result: {res}')
+        
+        self._loop.run_until_complete(self.enable_async())
 
     async def enable_async(self) -> None:
         """ Enable connection with GBC, commanding to go to OPERATION_ENABLED state. """
-        ht_task = self._machine_controller.schedule_first(
-            commands.HeartbeatCommad(self._receiver, 0))
+        self.start_heartbeat()
         cia402_task = self._machine_controller.schedule_last(commands.MachineStateCommad(self._receiver,
                                                                                          desired_state=CIA402MachineState.OPERATION_ENABLED))
-        asyncio.run_coroutine_threadsafe(
-            self._machine_controller.execute_commands(), loop=self._loop)
+        await cia402_task.task
         # asyncio.ensure_future(
         #     coro_or_future=self._machine_controller.execute_commands(), loop=self._loop)
-
-        # await ht_task.start()
-
-        await cia402_task.start()
 
 
 class StreamCommandFunction(RobotFunction):

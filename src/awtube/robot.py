@@ -133,6 +133,7 @@ class Robot(
     def run(self):
         """ Main execution of the thread. Is called when entering context """
         self.loop.create_task(self.receiver.listen())
+        self.loop.create_task(self.machine_controller.start())
         # self.loop.create_task(self.machine_controller.execute_commands())
         self.loop.run_forever()
 

@@ -49,13 +49,13 @@ class PeriodicTask(ControllerTask):
         self.args = args
         self.sleep_time = sleep_time
         self.is_started = False
-        self.task = None
+        self.task = asyncio.create_task(self._run())
 
     async def start(self):
         """ Start task to call coro """
         if not self.is_started:
             self.is_started = True
-            self.task = asyncio.create_task(self._run())
+            # self.task = asyncio.create_task(self._run())
 
     async def stop(self):
         """ Stop task and await it stopped """
@@ -66,10 +66,14 @@ class PeriodicTask(ControllerTask):
                 await self.task
 
     async def _run(self):
+        #
         result = TaskResult.RUNNING
         while result is not TaskResult.FAILURE:
-            await asyncio.sleep(self.sleep_time)
-            result = await self.coro(self.args)
+            if self.is_started:
+                await asyncio.sleep(self.sleep_time)
+                result = await self.coro(self.args)
+            else:
+                await asyncio.sleep(self.sleep_time)
 
 
 class OneTimeTask(ControllerTask):
@@ -94,8 +98,11 @@ class PeriodicUntilDoneTask(PeriodicTask):
     async def _run(self):
         result = TaskResult.RUNNING
         while result is TaskResult.RUNNING:
-            await asyncio.sleep(self.sleep_time)
-            result = await self.coro(self.args)
+            if self.is_started:
+                await asyncio.sleep(self.sleep_time)
+                result = await self.coro(self.args)
+            else:
+                await asyncio.sleep(self.sleep_time)
 
 
 class Controller(ABC):
@@ -129,7 +136,6 @@ class Controller(ABC):
         self._logger.debug(
             'Scheduled %s for %s', type(task).__name__, type(command).__name__)
         self._command_queue.queue.appendleft(item)
-        return task
 
 
 class MachineController(Controller):
@@ -152,7 +158,8 @@ class MachineController(Controller):
         self._heartbeat_freq = 1
         self.heartbeat_cmd = None
 
-        self.running_tasks = []
+    async def start(self) -> None:
+        await self._run()
 
     def _get_task(self, command) -> None | ControllerTask:
         task = None
@@ -199,6 +206,9 @@ class MachineController(Controller):
         if not self._current_cia402_cmd:
             self._current_cia402_cmd = cmd
 
+        # if not self._observer.payload:
+        #     return TaskResult.RUNNING
+
         cia402_state = device_state(
             self._observer.payload.machine.status_word)
 
@@ -216,17 +226,26 @@ class MachineController(Controller):
         self._current_cia402_cmd.execute()
         return TaskResult.RUNNING
 
-    async def execute_commands(self) -> None:
-        if not self._logger:
-            self._logger.error('No logger defined for controller!')
+    async def _run(self) -> None:
 
-        while not self._command_queue.empty():
-            # TODO: Fix here: not clear orede of tuple elements
-            cmd, task = self._command_queue.get(block=False)
+        while True:
+            if not self._logger:
+                self._logger.error('No logger defined for controller!')
+                await asyncio.sleep(0.5)
+                continue
 
-            await task.start()
-            self.tasks.add(task)
+            if self._observer.payload is None:
+                self._logger.error('Status Observer is not updated!')
+                await asyncio.sleep(0.5)
+                continue
 
+            if self._command_queue.empty():
+                await asyncio.sleep(0.5)
+            else:
+                # TODO: Fix here: not clear orede of tuple elements
+                cmd, task = self._command_queue.get(block=False)
+
+                await task.start()
 
 # class StreamController(Controller):
 #     """
