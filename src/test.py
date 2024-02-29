@@ -8,7 +8,7 @@ a.enable()
 
 a.target = MachineTarget.SIMULATION
 
-a.start()
+a.startup()
 
 time.sleep(5)
 

@@ -28,81 +28,7 @@ from awtube.types import MachineTarget
 from awtube.cia402 import transition, device_state
 from awtube.errors import AwtubeError, AWTubeErrorException
 
-
-class TaskResult(IntEnum):
-    """ Result of a Task for one iteration """
-    RUNNING = 0
-    FAILURE = 1
-    SUCCESS = 2
-
-
-class ControllerTask(ABC):
-    """ Task Wrappers used inside Controllers """
-    pass
-
-
-class PeriodicTask(ControllerTask):
-    """ Task Wrapper for a coroutine that runs periodically"""
-
-    def __init__(self, coro, args, sleep_time):
-        self.coro = coro
-        self.args = args
-        self.sleep_time = sleep_time
-        self.is_started = False
-        self.task = asyncio.create_task(self._run())
-
-    async def start(self):
-        """ Start task to call coro """
-        if not self.is_started:
-            self.is_started = True
-            # self.task = asyncio.create_task(self._run())
-
-    async def stop(self):
-        """ Stop task and await it stopped """
-        if self.is_started:
-            self.is_started = False
-            self.task.cancel()
-            with suppress(asyncio.CancelledError):
-                await self.task
-
-    async def _run(self):
-        #
-        result = TaskResult.RUNNING
-        while result is not TaskResult.FAILURE:
-            if self.is_started:
-                await asyncio.sleep(self.sleep_time)
-                result = await self.coro(self.args)
-            else:
-                await asyncio.sleep(self.sleep_time)
-
-
-class OneTimeTask(ControllerTask):
-    """ Task Wrapper for a coroutine that runs only once"""
-
-    def __init__(self, coro, args):
-        self.coro = coro
-        self.args = args
-        self.is_started = False
-        self.task = None
-
-    async def _run(self):
-        await self.coro(self.args)
-
-
-class PeriodicUntilDoneTask(PeriodicTask):
-    """ Task Wrapper for a coroutine that runs periodically until results in success or failure"""
-
-    def __init__(self, coro, args, sleep_time):
-        super().__init__(coro, args, sleep_time)
-
-    async def _run(self):
-        result = TaskResult.RUNNING
-        while result is TaskResult.RUNNING:
-            if self.is_started:
-                await asyncio.sleep(self.sleep_time)
-                result = await self.coro(self.args)
-            else:
-                await asyncio.sleep(self.sleep_time)
+import awtube.task_wrappers as task_wrappers
 
 
 class Controller(ABC):
@@ -117,10 +43,10 @@ class Controller(ABC):
     tasks = set()
 
     @abstractmethod
-    def _get_task(self, command) -> None | ControllerTask:
+    def _get_task(self, command) -> None | task_wrappers.TaskWrapper:
         """ Determine what type of task the controller uses for each command type. """
 
-    def schedule_last(self, command) -> ControllerTask:
+    def schedule_last(self, command) -> task_wrappers.TaskWrapper:
         """ Schedule command after others already in queue. """
         task = self._get_task(command=command)
         item = (command, task)
@@ -129,7 +55,7 @@ class Controller(ABC):
         self._command_queue.put(item)
         return task
 
-    def schedule_first(self, command) -> ControllerTask:
+    def schedule_first(self, command) -> task_wrappers.TaskWrapper:
         """ Schedule command before others already in queue. """
         task = self._get_task(command=command)
         item = (command, task)
@@ -161,17 +87,17 @@ class MachineController(Controller):
     async def start(self) -> None:
         await self._run()
 
-    def _get_task(self, command) -> None | ControllerTask:
+    def _get_task(self, command) -> None | task_wrappers.TaskWrapper:
         task = None
 
         if isinstance(command, commands.HeartbeatCommad):
-            task = PeriodicTask(
+            task = task_wrappers.PeriodicTask(
                 coro=self._heartbeat, args=(command), sleep_time=1)
         elif isinstance(command, commands.KinematicsConfigurationCommad):
-            task = OneTimeTask(
+            task = task_wrappers.OneTimeTask(
                 coro=self._kc, args=(command))
         elif isinstance(command, commands.MachineStateCommad):
-            task = PeriodicUntilDoneTask(
+            task = task_wrappers.PeriodicUntilDoneTask(
                 coro=self._machine_state, args=(command), sleep_time=1)
         else:
             self._logger.error(
@@ -179,12 +105,12 @@ class MachineController(Controller):
 
         return task
 
-    async def _heartbeat(self, cmd: None | commands.HeartbeatCommad) -> None | TaskResult:
+    async def _heartbeat(self, cmd: None | commands.HeartbeatCommad) -> None | task_wrappers.TaskResult:
         if not self.heartbeat_cmd:
             self.heartbeat_cmd = cmd
         if not self._observer.payload:
             self._logger.debug('Observer not yet updated!')
-            return TaskResult.RUNNING
+            return task_wrappers.TaskResult.RUNNING
 
         if not self.last_heartbeat_time:
             self.last_heartbeat_time = time.time()
@@ -192,17 +118,19 @@ class MachineController(Controller):
         self.heartbeat_cmd._heartbeat = self._observer.payload.machine.heartbeat
         self.heartbeat_cmd.execute()
         self.sending_heartbeat = True
-        self.last_heartbeat_time = time.time()
+
+        delay = time.time()-self.last_heartbeat_time
         self._logger.debug(
-            'Heartbeat: %s in %s secs', self.heartbeat_cmd._heartbeat, (time.time()-self.last_heartbeat_time))
+            'Heartbeat: %s in %s secs', self.heartbeat_cmd._heartbeat, round(delay, 3))
+        self.last_heartbeat_time = time.time()
 
-        return TaskResult.RUNNING
+        return task_wrappers.TaskResult.RUNNING
 
-    async def _kc(self, cmd: None | commands.KinematicsConfigurationCommad) -> None | TaskResult:
+    async def _kc(self, cmd: None | commands.KinematicsConfigurationCommad) -> None | task_wrappers.TaskResult:
         self._logger.debug('Set limits_disabled to %s', cmd.disable_limits)
         cmd.execute()
 
-    async def _machine_state(self, cmd: None | commands.MachineStateCommad) -> None | TaskResult:
+    async def _machine_state(self, cmd: None | commands.MachineStateCommad) -> None | task_wrappers.TaskResult:
         if not self._current_cia402_cmd:
             self._current_cia402_cmd = cmd
 
@@ -214,7 +142,7 @@ class MachineController(Controller):
 
         if cia402_state == self._current_cia402_cmd.desired_state:
             self._logger.debug('CIA402: %s.', cia402_state.value)
-            return TaskResult.SUCCESS
+            return task_wrappers.TaskResult.SUCCESS
 
         # every iteration send command
         next_cw = transition(
@@ -224,7 +152,7 @@ class MachineController(Controller):
         self._current_cia402_cmd.control_word = next_cw
         self._current_cw = next_cw
         self._current_cia402_cmd.execute()
-        return TaskResult.RUNNING
+        return task_wrappers.TaskResult.RUNNING
 
     async def _run(self) -> None:
 

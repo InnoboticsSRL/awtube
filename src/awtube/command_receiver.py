@@ -47,8 +47,7 @@ class WebsocketThread(
     def __init__(self,
                  url: str,
                  headers: Dict[str, str] = None,
-                 freq: int = 100,
-                 event_loop: asyncio.AbstractEventLoop = None):
+                 freq: int = 100):
         """
         Args:
             url: Websocket url to connect to.
@@ -64,7 +63,6 @@ class WebsocketThread(
         self.__freq = freq
         self._rate = 1/self.__freq
 
-        self.loop: asyncio.AbstractEventLoop = event_loop
         self.killed: bool = False
         # self.outgoing = queue.Queue(maxsize=10)
         self.outgoing = queue.Queue()

@@ -6,6 +6,10 @@ from __future__ import annotations
 from enum import IntEnum
 
 
+class ThreadLoopNotRunningError(Exception):
+    pass
+
+
 class AwtubeError(IntEnum):
     NONE = 0
     BAD_ARGUMENT = 1

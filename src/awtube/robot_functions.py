@@ -3,12 +3,10 @@
 """ Robot functions. """
 
 from abc import ABC
-from re import L
 import typing as tp
 import logging
 import asyncio
 import time
-from unittest import async_case
 
 import awtube.logging_config
 
@@ -25,6 +23,8 @@ from awtube.command_receiver import CommandReceiver
 import awtube.controllers as controllers
 import awtube.commands as commands
 
+_logger = logging.getLogger(__name__)
+
 
 class RobotFunction(ABC):
     """ RobotFunction Interface used to implement different functions fo the robot. """
@@ -37,10 +37,11 @@ class EnableFunction(RobotFunction):
     def __init__(self,
                  machine_controller: controllers.MachineController,
                  receiver: CommandReceiver,
-                 loop: AbstractEventLoop) -> None:
+                 #  loop: AbstractEventLoop
+                 ) -> None:
         self._machine_controller = machine_controller
         self._receiver = receiver
-        self._loop = loop
+        # self._loop = loop
 
     # not yet ready
     # def reset(self) -> None:
@@ -59,8 +60,23 @@ class EnableFunction(RobotFunction):
         # res = self._loop.run_until_complete(self.enable_async())
         # fut = asyncio.run_coroutine_threadsafe(
         #     self.enable_async(), loop=self._loop)
-        
-        self._loop.run_until_complete(self.enable_async())
+
+        # running = True
+
+        # def evaluate(future):
+        #     stop = future.result()
+        #     if stop:
+        #         _logger.debug('done enable()')
+        #         running = False
+
+        # futur = asyncio.run_coroutine_threadsafe(self.enable_async(),
+        #                                          loop=self._loop)
+        # futur.add_done_callback(evaluate)
+
+        # TODO: this blocks the whole loop, this or smth similar needed
+        # return futur.result()
+
+        self.tloop.post(self.enable_async())
 
     async def enable_async(self) -> None:
         """ Enable connection with GBC, commanding to go to OPERATION_ENABLED state. """
@@ -108,10 +124,11 @@ class MoveJointsInterpolatedFunction(RobotFunction):
     def __init__(self,
                  stream_commander: StreamCommander,
                  receiver: CommandReceiver,
-                 loop: AbstractEventLoop) -> None:
+                 #  loop: AbstractEventLoop
+                 ) -> None:
         self._stream_commander = stream_commander
         self._receiver = receiver
-        self._loop = loop
+        self._loop = self.tloop.loop
 
     def move_joints_interpolated_gen(self, points) -> Iterator[FunctionResult]:
         """ Async generator used to send a moveLine command to a CommandReceiver and recieve feedback on points done.
@@ -167,11 +184,12 @@ class MoveLineFunction(RobotFunction):
     def __init__(self,
                  stream_commander: StreamCommander,
                  receiver: CommandReceiver,
-                 loop: asyncio.AbstractEventLoop = None) -> None:
+                 #  loop: asyncio.AbstractEventLoop = None
+                 ) -> None:
         self._logger = logging.getLogger(self.__class__.__name__)
         self._stream_commander = stream_commander
         self._receiver = receiver
-        self._loop = loop
+        self._loop = self.tloop.loop
 
     def move_line(self,
                   translation: tp.Dict[str, float],

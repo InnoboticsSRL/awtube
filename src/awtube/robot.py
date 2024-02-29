@@ -28,9 +28,11 @@ import awtube.controllers as controllers
 
 import awtube.logging_config
 
+from awtube.threadloop import ThreadLoop
+
 
 class Robot(
-        threading.Thread,
+        # threading.Thread,
         robot_functions.MoveJointsInterpolatedFunction,
         robot_functions.MoveLineFunction,
         robot_functions.EnableFunction,
@@ -49,12 +51,15 @@ class Robot(
                  log_level: int | str = logging.INFO,
                  logger: logging.Logger | None = None):
         # thread
-        threading.Thread.__init__(self)
-        self.daemon = True
+        # threading.Thread.__init__(self)
+        # self.daemon = True
 
         # loop
-        self.loop: asyncio.AbstractEventLoop = asyncio.new_event_loop()
-        asyncio.set_event_loop(self.loop)
+        # self.loop: asyncio.AbstractEventLoop = asyncio.new_event_loop()
+        # asyncio.set_event_loop(self.loop)
+
+        self.tloop = ThreadLoop()
+        self.tloop.start()
 
         self.killed: bool = False
 
@@ -74,7 +79,7 @@ class Robot(
 
         # Command receiver
         self.receiver: CommandReceiver = WebsocketThread(
-            f"ws://{self._robot_ip}:{self._port}/ws", event_loop=self.loop)
+            f"ws://{self._robot_ip}:{self._port}/ws")
 
         # Observers
         self.stream_observer = StreamObserver()
@@ -97,22 +102,24 @@ class Robot(
         # Define robot functions api
         robot_functions.MoveJointsInterpolatedFunction.__init__(self,
                                                                 self.stream_commander,
-                                                                self.receiver,
-                                                                self.loop)
+                                                                self.receiver
+                                                                )
         robot_functions.MoveLineFunction.__init__(self,
                                                   self.stream_commander,
-                                                  self.receiver,
-                                                  self.loop)
+                                                  self.receiver
+                                                  )
         robot_functions.MoveToPositioinFunction.__init__(self,
                                                          self.stream_commander,
-                                                         self.receiver)
+                                                         self.receiver
+                                                         )
         robot_functions.EnableFunction.__init__(self,
                                                 self.machine_controller,
-                                                self.receiver,
-                                                self.loop)
+                                                self.receiver
+                                                )
         robot_functions.StreamCommandFunction.__init__(self,
                                                        self.stream_commander,
-                                                       self.receiver)
+                                                       self.receiver
+                                                       )
 
         # test
         # self.machine_commander.limits_disabled = True
@@ -132,34 +139,37 @@ class Robot(
 
     def run(self):
         """ Main execution of the thread. Is called when entering context """
-        self.loop.create_task(self.receiver.listen())
-        self.loop.create_task(self.machine_controller.start())
-        # self.loop.create_task(self.machine_controller.execute_commands())
-        self.loop.run_forever()
+        # self.loop.create_task(self.receiver.listen())
+        # self.loop.create_task(self.machine_controller.start())
+        # self.loop.run_forever()
+
+        self.tloop.post(self.receiver.listen())
+        self.tloop.post(self.machine_controller.start())
 
     def kill(self):
         """ Cancel tasks and stop loop from sync, threadsafe """
         self._logger.debug('Killing robot.')
         self.killed = True
-        asyncio.run_coroutine_threadsafe(self.stop_loop(), self.loop)
+        # asyncio.run_coroutine_threadsafe(self.stop_loop(), self.loop)
+        self.tloop.stop()
 
-    async def stop_loop(self):
-        """ Cancel tasks and stop loop, must be called threadsafe """
-        tasks = [
-            task
-            for task in asyncio.all_tasks()
-            if task is not asyncio.current_task()
-        ]
-        for task in tasks:
-            task.cancel()
+    # async def stop_loop(self):
+        # """ Cancel tasks and stop loop, must be called threadsafe """
+        # tasks = [
+        #     task
+        #     for task in asyncio.all_tasks()
+        #     if task is not asyncio.current_task()
+        # ]
+        # for task in tasks:
+        #     task.cancel()
 
-        await asyncio.gather(*tasks, return_exceptions=True)
-        self.loop.stop()
+        # await asyncio.gather(*tasks, return_exceptions=True)
+        # self.loop.stop()
         # self.join()
 
-    async def startup_async(self) -> None:
-        """ Start the whole process of listening and commanding. """
-        await asyncio.gather(self.receiver.listen())
+    # async def startup_async(self) -> None:
+    #     """ Start the whole process of listening and commanding. """
+    #     await asyncio.gather(self.receiver.listen())
 
     def startup(self) -> bool:
         """
@@ -167,6 +177,7 @@ class Robot(
             Run the procedure and return when the 
             robot is ready to take new commands.
         """
-        self.start()
-        self.loop.call_soon_threadsafe(self.run())
+        # self.start()
+        # self.loop.call_soon_threadsafe(self.run())
+        self.run()
         return True
