@@ -6,7 +6,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from pydantic import BaseModel
 
-from awtube.types import ActivityType, PositionReference, Pose, MachineTarget, StreamCommand
+from awtube.types import ActivityType, PositionReference, Pose, MachineTarget, StreamCommandType
 
 
 class Builder(ABC, BaseModel):
@@ -101,7 +101,7 @@ class StreamCommandBuilder(Builder):
                 }}}
         return self
 
-    def stream_command(self, value: StreamCommand) -> StreamCommandBuilder:
+    def stream_command(self, value: StreamCommandType) -> StreamCommandBuilder:
         """  Stream command. """
         self.command = {"stream": {
             "0": {

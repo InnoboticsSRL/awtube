@@ -124,16 +124,16 @@ class TelemetryObserver(Observer):
                                    for joint_i in js['telemetry'][-1]['set']],
                         velocities=[joint_i['v']
                                     for joint_i in js['telemetry'][-1]['set']],
-                        accelerations=[joint_i['a']
-                                       for joint_i in js['telemetry'][-1]['set']],
+                        # accelerations=[joint_i['a']
+                        #                for joint_i in js['telemetry'][-1]['set']],
                         torques=[joint_i['t'] for joint_i in js['telemetry'][-1]['set']]),
                     'actual': JointStates(
                         positions=[joint_i['p']
                                    for joint_i in js['telemetry'][-1]['act']],
                         velocities=[joint_i['v']
                                     for joint_i in js['telemetry'][-1]['act']],
-                        accelerations=[joint_i['a']
-                                       for joint_i in js['telemetry'][-1]['act']],
+                        # accelerations=[joint_i['a']
+                        #                for joint_i in js['telemetry'][-1]['act']],
                         torques=[joint_i['t'] for joint_i in js['telemetry'][-1]['act']])
                 }
 

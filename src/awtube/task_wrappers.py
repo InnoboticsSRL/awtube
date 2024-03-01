@@ -1,62 +1,64 @@
 #!/usr/bin/env python3
 
-""" Task wrappers. """
+""" 
+Task wrappers, they wrap coroutines with tasks and control the how they are executed
+using TaskWrapperResult, also they chain these running tasks with futures which can 
+be used to await, check running or cancel these tasks.
+"""
 
-from abc import ABC
-import logging
+from abc import ABC, abstractmethod
 import asyncio
 from enum import IntEnum
-from threading import Thread
-from asyncio import Condition
-from typing import Optional
 from contextlib import suppress
 
+# TODO: test if the stoping functionality for these tasks is working as expected
 
-class TaskResult(IntEnum):
-    """ Result of a Task for one iteration """
-    RUNNING = 0
-    FAILURE = 1
-    SUCCESS = 2
+
+class TaskWrapperResult(IntEnum):
+    """ Result of a TaskWrapper iteration """
+    NONE = 0
+    RUNNING = 1
+    FAILURE = 2
+    SUCCESS = 3
 
 
 class TaskWrapper(ABC):
     """ Asyncio task wrappers. """
-    pass
+    coro = None
+    args = None
+    is_started = False
+    _task = None
+    _future = asyncio.Future()
 
+    def is_running(self):
+        return not self._future.done()
 
-class PeriodicTask(TaskWrapper):
-    """ Task Wrapper for a coroutine that runs periodically"""
-
-    def __init__(self, coro, args, sleep_time):
-        self.coro = coro
-        self.args = args
-        self.sleep_time = sleep_time
-        self.is_started = False
-        self.task = asyncio.create_task(self._run())
+    def __await__(self):
+        return self._future.__await__()
 
     async def start(self):
         """ Start task to call coro """
         if not self.is_started:
             self.is_started = True
-            # self.task = asyncio.create_task(self._run())
+            self._task = asyncio.create_task(self._main())
 
     async def stop(self):
         """ Stop task and await it stopped """
         if self.is_started:
             self.is_started = False
-            self.task.cancel()
+            self._task.cancel()
+            self._future.cancel()
             with suppress(asyncio.CancelledError):
-                await self.task
+                await self._task
+                await self._future
 
+    async def _main(self):
+        result = await self._run()
+        self._future.set_result(result)
+
+    @abstractmethod
     async def _run(self):
-        #
-        result = TaskResult.RUNNING
-        while result is not TaskResult.FAILURE:
-            if self.is_started:
-                await asyncio.sleep(self.sleep_time)
-                result = await self.coro(self.args)
-            else:
-                await asyncio.sleep(self.sleep_time)
+        pass
 
 
 class OneTimeTask(TaskWrapper):
@@ -66,23 +68,38 @@ class OneTimeTask(TaskWrapper):
         self.coro = coro
         self.args = args
         self.is_started = False
-        self.task = None
 
     async def _run(self):
-        await self.coro(self.args)
+        return await self.coro(self.args)
+
+
+class PeriodicTask(TaskWrapper):
+    """ Task Wrapper for a coroutine that runs periodically"""
+
+    def __init__(self, coro, args, sleep_time):
+        self.coro = coro
+        self.args = args
+        self.sleep_time = sleep_time
+        self._future = asyncio.Future()
+
+    async def _run(self):
+        res = TaskWrapperResult.RUNNING
+        while res is not TaskWrapperResult.FAILURE:
+            res = await self.coro(self.args)
+            await asyncio.sleep(self.sleep_time)
+        return res
 
 
 class PeriodicUntilDoneTask(PeriodicTask):
-    """ Task Wrapper for a coroutine that runs periodically until results in success or failure"""
+    """ Wrapps task that run periodically until results is success or failure"""
 
     def __init__(self, coro, args, sleep_time):
+        self._future = asyncio.Future()
         super().__init__(coro, args, sleep_time)
 
     async def _run(self):
-        result = TaskResult.RUNNING
-        while result is TaskResult.RUNNING:
-            if self.is_started:
-                await asyncio.sleep(self.sleep_time)
-                result = await self.coro(self.args)
-            else:
-                await asyncio.sleep(self.sleep_time)
+        res = TaskWrapperResult.RUNNING
+        while res is TaskWrapperResult.RUNNING or res is None:
+            res = await self.coro(self.args)
+            await asyncio.sleep(self.sleep_time)
+        return res

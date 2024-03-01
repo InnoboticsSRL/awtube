@@ -59,7 +59,7 @@ class StreamState(IntEnum):
     STOPPED = 5
 
 
-class StreamCommand(IntEnum):
+class StreamCommandType(IntEnum):
     RUN = 0
     PAUSE = 1
     STOP = 2

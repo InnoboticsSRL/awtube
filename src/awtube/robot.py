@@ -54,6 +54,8 @@ class Robot(
         # threading.Thread.__init__(self)
         # self.daemon = True
 
+        # self._logger = logging.getLogger(self.__class__.__name__)
+
         # loop
         # self.loop: asyncio.AbstractEventLoop = asyncio.new_event_loop()
         # asyncio.set_event_loop(self.loop)
@@ -87,12 +89,10 @@ class Robot(
         self.status_observer = StatusObserver()
 
         # Commanders
-        self.stream_commander = StreamCommander(self.stream_observer)
-        # self.machine_commander = MachineCommander(self.status_observer)
+        self.stream_controller = controllers.StreamController(
+            self.stream_observer)
         self.machine_controller = controllers.MachineController(
             self.status_observer)
-        # TODO: fix, all same type commanders should have the same interface
-        self.machine_controller.receiver = self.receiver
 
         # Register observers
         self.receiver.attach_observer(self.telemetry_observer)
@@ -101,15 +101,15 @@ class Robot(
 
         # Define robot functions api
         robot_functions.MoveJointsInterpolatedFunction.__init__(self,
-                                                                self.stream_commander,
+                                                                self.stream_controller,
                                                                 self.receiver
                                                                 )
         robot_functions.MoveLineFunction.__init__(self,
-                                                  self.stream_commander,
+                                                  self.stream_controller,
                                                   self.receiver
                                                   )
         robot_functions.MoveToPositioinFunction.__init__(self,
-                                                         self.stream_commander,
+                                                         self.stream_controller,
                                                          self.receiver
                                                          )
         robot_functions.EnableFunction.__init__(self,
@@ -117,7 +117,7 @@ class Robot(
                                                 self.receiver
                                                 )
         robot_functions.StreamCommandFunction.__init__(self,
-                                                       self.stream_commander,
+                                                       self.stream_controller,
                                                        self.receiver
                                                        )
 
@@ -137,33 +137,31 @@ class Robot(
     #         self.kill()
     #     self.join()
 
-    def run(self):
-        """ Main execution of the thread. Is called when entering context """
+    # def run(self):
+    #     """ Main execution of the thread. Is called when entering context """
         # self.loop.create_task(self.receiver.listen())
         # self.loop.create_task(self.machine_controller.start())
         # self.loop.run_forever()
-
-        self.tloop.post(self.receiver.listen())
-        self.tloop.post(self.machine_controller.start())
 
     def kill(self):
         """ Cancel tasks and stop loop from sync, threadsafe """
         self._logger.debug('Killing robot.')
         self.killed = True
         # asyncio.run_coroutine_threadsafe(self.stop_loop(), self.loop)
+        self.tloop.post_wait(self.stop_loop())
         self.tloop.stop()
 
-    # async def stop_loop(self):
-        # """ Cancel tasks and stop loop, must be called threadsafe """
-        # tasks = [
-        #     task
-        #     for task in asyncio.all_tasks()
-        #     if task is not asyncio.current_task()
-        # ]
-        # for task in tasks:
-        #     task.cancel()
+    async def stop_loop(self):
+        """ Cancel tasks and stop loop, must be called threadsafe """
+        tasks = [
+            task
+            for task in asyncio.all_tasks()
+            if task is not asyncio.current_task()
+        ]
+        for task in tasks:
+            task.cancel()
 
-        # await asyncio.gather(*tasks, return_exceptions=True)
+        await asyncio.gather(*tasks, return_exceptions=True)
         # self.loop.stop()
         # self.join()
 
@@ -179,5 +177,8 @@ class Robot(
         """
         # self.start()
         # self.loop.call_soon_threadsafe(self.run())
-        self.run()
+        self.tloop.post(self.receiver.listen())
+        self.tloop.post(self.stream_controller.start())
+        self.tloop.post(self.machine_controller.start())
+        
         return True

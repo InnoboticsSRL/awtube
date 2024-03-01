@@ -12,6 +12,7 @@ from awtube.types import JointStates
 from awtube.cia402 import CIA402MachineState
 from awtube.errors import AwtubeError, AWTubeErrorException
 from awtube.command_receiver import CommandReceiver
+import awtube.types as types
 
 # builders
 stream_activity_builder = StreamActivityBuilder()
@@ -287,16 +288,16 @@ class StreamCommand(Command):
 
     def __init__(self,
                  receiver: CommandReceiver,
-                 command: StreamCommand) -> None:
+                 command: types.StreamCommandType) -> None:
         self._cmd = command
         self._receiver = receiver
 
     @property
-    def command_type(self) -> StreamCommand:
+    def command_type(self) -> types.StreamCommandType:
         return self._cmd
 
     @command_type.setter
-    def command_type(self, value: StreamCommand) -> None:
+    def command_type(self, value: types.StreamCommandType) -> None:
         self._cmd = value
 
     def execute(self) -> None:

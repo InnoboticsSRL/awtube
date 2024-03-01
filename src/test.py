@@ -4,16 +4,14 @@ import time
 
 a = Robot()
 
-a.enable()
+a.startup()
 
 a.target = MachineTarget.SIMULATION
 
-a.startup()
-
-time.sleep(5)
+a.enable()
 
 try:
-    for i in range(1000):
+    for i in range(2):
 
         print(f'Iteration: {i}')
 

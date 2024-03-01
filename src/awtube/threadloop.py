@@ -17,7 +17,8 @@ class ThreadLoop(Thread):
 
     def __init__(self) -> None:
         Thread.__init__(self)
-        self._logger = logging.getLogger(__name__)
+        # self.daemon = True
+        self._logger = logging.getLogger(self.__class__.__name__)
         self.loop = None
         self._cond = Condition()
 
@@ -37,9 +38,22 @@ class ThreadLoop(Thread):
             self._cond.notify_all()
 
     def stop(self):
+        # self.loop.call_soon_threadsafe(self.cancel_loop_tasks())
         self.loop.call_soon_threadsafe(self.loop.stop)
         self.join()
         self.loop.close()
+
+    # async def cancel_loop_tasks(self):
+    #     """ Cancel tasks and stop loop, must be called threadsafe """
+    #     tasks = [
+    #         task
+    #         for task in asyncio.all_tasks()
+    #         if task is not asyncio.current_task()
+    #     ]
+    #     for task in tasks:
+    #         task.cancel()
+
+    #     await asyncio.gather(*tasks, return_exceptions=True)
 
     def post(self, coro):
         if not self.loop or not self.loop.is_running() or not self.is_alive():

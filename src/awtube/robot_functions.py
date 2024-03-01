@@ -23,7 +23,12 @@ from awtube.command_receiver import CommandReceiver
 import awtube.controllers as controllers
 import awtube.commands as commands
 
+import awtube.logging_config
+
+# TODO: improve the logger
 _logger = logging.getLogger(__name__)
+
+# TODO: sync wrapper for async functions ?
 
 
 class RobotFunction(ABC):
@@ -37,11 +42,9 @@ class EnableFunction(RobotFunction):
     def __init__(self,
                  machine_controller: controllers.MachineController,
                  receiver: CommandReceiver,
-                 #  loop: AbstractEventLoop
                  ) -> None:
         self._machine_controller = machine_controller
         self._receiver = receiver
-        # self._loop = loop
 
     # not yet ready
     # def reset(self) -> None:
@@ -50,42 +53,23 @@ class EnableFunction(RobotFunction):
     #                              desired_state=CIA402MachineState.SWITCHED_ON)
     #     self._machine_commander.add_command(cmd)
 
-    def start_heartbeat(self) -> None:
-        """ Start sending heartbeat messages to motion controller. """
-        ht_task = self._machine_controller.schedule_first(
-            commands.HeartbeatCommad(self._receiver, 0))
-
     def enable(self) -> None:
         """ Enable connection with GBC, commanding to go to OPERATION_ENABLED state. """
-        # res = self._loop.run_until_complete(self.enable_async())
-        # fut = asyncio.run_coroutine_threadsafe(
-        #     self.enable_async(), loop=self._loop)
-
-        # running = True
-
-        # def evaluate(future):
-        #     stop = future.result()
-        #     if stop:
-        #         _logger.debug('done enable()')
-        #         running = False
-
-        # futur = asyncio.run_coroutine_threadsafe(self.enable_async(),
-        #                                          loop=self._loop)
-        # futur.add_done_callback(evaluate)
-
-        # TODO: this blocks the whole loop, this or smth similar needed
-        # return futur.result()
-
-        self.tloop.post(self.enable_async())
+        self.tloop.post_wait(self.enable_async())
+        _logger.debug('Robot is enabled!')
 
     async def enable_async(self) -> None:
         """ Enable connection with GBC, commanding to go to OPERATION_ENABLED state. """
-        self.start_heartbeat()
-        cia402_task = self._machine_controller.schedule_last(commands.MachineStateCommad(self._receiver,
-                                                                                         desired_state=CIA402MachineState.OPERATION_ENABLED))
-        await cia402_task.task
-        # asyncio.ensure_future(
-        #     coro_or_future=self._machine_controller.execute_commands(), loop=self._loop)
+        ht_task = self._machine_controller.schedule_first(
+            commands.HeartbeatCommad(self._receiver, 0))
+
+        # TODO: We should be able to know that the periodic
+        # heartbeat task is running
+        # await ht_task.task
+
+        cia402_task_wrapper = self._machine_controller.schedule_last(commands.MachineStateCommad(self._receiver,
+                                                                                                 desired_state=CIA402MachineState.OPERATION_ENABLED))
+        return await cia402_task_wrapper
 
 
 class StreamCommandFunction(RobotFunction):
@@ -100,22 +84,22 @@ class StreamCommandFunction(RobotFunction):
         self._stream_commander = stream_commander
         self._receiver = receiver
 
-    def __call_cmd(self, command: types.StreamCommand):
+    def __call_cmd(self, command: types.StreamCommandType):
         cmd = commands.StreamCommand(self._receiver,
                                      command=command)
         self._stream_commander.add_command_at_beginning(cmd)
 
     def stop_stream(self) -> None:
         """ Stop stream. """
-        self.__call_cmd(types.StreamCommand.STOP)
+        self.__call_cmd(types.StreamCommandType.STOP)
 
     def pause_stream(self) -> None:
         """ Pause stream. """
-        self.__call_cmd(types.StreamCommand.PAUSE)
+        self.__call_cmd(types.StreamCommandType.PAUSE)
 
     def run_stream(self) -> None:
         """ Run stream. """
-        self.__call_cmd(types.StreamCommand.RUN)
+        self.__call_cmd(types.StreamCommandType.RUN)
 
 
 class MoveJointsInterpolatedFunction(RobotFunction):
@@ -182,19 +166,17 @@ class MoveJointsInterpolatedFunction(RobotFunction):
 
 class MoveLineFunction(RobotFunction):
     def __init__(self,
-                 stream_commander: StreamCommander,
+                 stream_controller: controllers.StreamController,
                  receiver: CommandReceiver,
                  #  loop: asyncio.AbstractEventLoop = None
                  ) -> None:
         self._logger = logging.getLogger(self.__class__.__name__)
-        self._stream_commander = stream_commander
+        self._stream_controller = stream_controller
         self._receiver = receiver
-        self._loop = self.tloop.loop
 
     def move_line(self,
                   translation: tp.Dict[str, float],
-                  rotation: tp.Dict[str, float],
-                  tag: int = 0) -> None:
+                  rotation: tp.Dict[str, float]) -> None:
         """ Send a moveLine command to a CommandReceiver, but a blocking call.
 
         Args:
@@ -202,16 +184,13 @@ class MoveLineFunction(RobotFunction):
             rotation (tp.Dict[str, float]): Dict of rotation, a quaternion: x, y, z, w
             tag (int, optional): tag(id) with which to send the command to the robot. Defaults to 0.
         """
-        futur = asyncio.run_coroutine_threadsafe(self.move_line_async(translation,
-                                                                      rotation,
-                                                                      tag),
-                                                 loop=self._loop)
-        return futur.result()
+        self.tloop.post_wait(self.move_line_async(translation,
+                                                  rotation))
+        self._logger.debug('moveLine done')
 
     async def move_line_async(self,
                               translation: tp.Dict[str, float],
-                              rotation: tp.Dict[str, float],
-                              tag: int = 0) -> FunctionResult:
+                              rotation: tp.Dict[str, float]) -> FunctionResult:
         """ Send a moveLine command to a CommandReceiver.
 
         Args:
@@ -219,17 +198,11 @@ class MoveLineFunction(RobotFunction):
             rotation (tp.Dict[str, float]): Dict of rotation, a quaternion: x, y, z, w
             tag (int, optional): tag(id) with which to send the command to the robot. Defaults to 0.
         """
-        self._logger.debug('Started moveLine.')
         # loop = asyncio.get_running_loop()
         cmd = commands.MoveLineCommand(
-            self._receiver, translation, rotation, tag)
-        self._stream_commander.add_command(cmd)
-        execution = self._stream_commander.execute_commands()
-        task = await anext(execution)
-        result = await task
-        self._logger.debug('moveLine done with result: %s.', result)
-
-        return result
+            self._receiver, translation, rotation)
+        task = self._stream_controller.schedule_last(cmd)
+        return await task
 
 
 class MoveToPositioinFunction(RobotFunction):
