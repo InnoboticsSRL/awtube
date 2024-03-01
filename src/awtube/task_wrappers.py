@@ -100,6 +100,6 @@ class PeriodicUntilDoneTask(PeriodicTask):
     async def _run(self):
         res = TaskWrapperResult.RUNNING
         while res is TaskWrapperResult.RUNNING or res is None:
-            res = await self.coro(self.args)
             await asyncio.sleep(self.sleep_time)
+            res = await self.coro(self.args)
         return res

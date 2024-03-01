@@ -120,4 +120,3 @@ class WebsocketThread(
     def put(self, message: str) -> None:
         """ Put message in the receivers queue. """
         self.outgoing.put(message)
-        print(message)

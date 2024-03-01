@@ -33,11 +33,11 @@ from awtube.threadloop import ThreadLoop
 
 class Robot(
         # threading.Thread,
-        robot_functions.MoveJointsInterpolatedFunction,
+        # robot_functions.MoveJointsInterpolatedFunction,
         robot_functions.MoveLineFunction,
         robot_functions.EnableFunction,
-        robot_functions.MoveToPositioinFunction,
-        robot_functions.StreamCommandFunction
+        # robot_functions.MoveToPositioinFunction,
+        # robot_functions.StreamCommandFunction
 ):
     """
         Class which puts everything together, commanders, observers and robot functions.
@@ -100,26 +100,26 @@ class Robot(
         self.receiver.attach_observer(self.status_observer)
 
         # Define robot functions api
-        robot_functions.MoveJointsInterpolatedFunction.__init__(self,
-                                                                self.stream_controller,
-                                                                self.receiver
-                                                                )
+        # robot_functions.MoveJointsInterpolatedFunction.__init__(self,
+        #                                                         self.stream_controller,
+        #                                                         self.receiver
+        #                                                         )
         robot_functions.MoveLineFunction.__init__(self,
                                                   self.stream_controller,
                                                   self.receiver
                                                   )
-        robot_functions.MoveToPositioinFunction.__init__(self,
-                                                         self.stream_controller,
-                                                         self.receiver
-                                                         )
+        # robot_functions.MoveToPositioinFunction.__init__(self,
+        #                                                  self.stream_controller,
+        #                                                  self.receiver
+        #                                                  )
         robot_functions.EnableFunction.__init__(self,
                                                 self.machine_controller,
                                                 self.receiver
                                                 )
-        robot_functions.StreamCommandFunction.__init__(self,
-                                                       self.stream_controller,
-                                                       self.receiver
-                                                       )
+        # robot_functions.StreamCommandFunction.__init__(self,
+        #                                                self.stream_controller,
+        #                                                self.receiver
+        #                                                )
 
         # test
         # self.machine_commander.limits_disabled = True

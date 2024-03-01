@@ -11,7 +11,7 @@ a.target = MachineTarget.SIMULATION
 a.enable()
 
 try:
-    for i in range(2):
+    for i in range(100):
 
         print(f'Iteration: {i}')
 

@@ -97,7 +97,6 @@ class Controller(ABC):
 
     async def _run(self) -> None:
         while True:
-            self._logger.debug('One iteration of main loop')
             # TODO: how many times should it try
             if not self._logger:
                 self._logger.error('No logger defined for controller!')
@@ -214,7 +213,7 @@ class StreamController(Controller):
 
         # stream
         self._min_stream_capacity = min_stream_capacity
-        self._stream_observer: StreamObserver = stream_observer
+        self._observer: StreamObserver = stream_observer
         self._command_queue: queue.Queue[Command] = queue.Queue()
 
         # single cmd
@@ -237,19 +236,16 @@ class StreamController(Controller):
             Returns latest stream tag from stream observer.
             If stream server not updated returns None. 
         """
-        if self._stream_observer.payload:
-            return self._stream_observer.payload.tag
+        if self._observer.payload:
+            return self._observer.payload.tag
 
     async def _single_cmd_callback(self, cmd: None | commands.Command) -> None | TaskWrapperResult:
-        self._logger.debug('Sending single cmd %s', type(cmd).__name__)
-
-        # cmd.tag = self._current_tag() + 1
-        cmd.execute()
 
         if not self._single_cmd_running:
+            self._logger.debug('Sending single cmd %s', type(cmd).__name__)
 
             cmd.tag = self._current_tag() + 1
-            if self._stream_observer.payload.capacity >= self._min_stream_capacity:
+            if self._observer.payload.capacity >= self._min_stream_capacity:
 
                 if isinstance(cmd, commands.StreamCommand):
                     if cmd.command_type is types.StreamCommandType.STOP:
@@ -268,7 +264,7 @@ class StreamController(Controller):
 
         else:
             # check if execution has finished
-            if self._stream_observer.payload.tag == cmd.tag and self._stream_observer.payload.state == StreamState.IDLE:
+            if self._observer.payload.tag == cmd.tag and self._observer.payload.state == StreamState.IDLE:
                 self._single_cmd_running = False
                 return TaskWrapperResult.SUCCESS
             else:
