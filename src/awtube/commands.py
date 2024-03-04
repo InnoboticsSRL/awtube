@@ -203,6 +203,7 @@ class MoveJointsInterpolatedCommand(Command):
                                                                        move_params={}
                                                                        ).build()
         self._receiver.put(msg)
+        
 
 
 class MoveJointsCommand(Command):

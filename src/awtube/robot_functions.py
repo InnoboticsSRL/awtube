@@ -16,7 +16,7 @@ from awtube.types import Pose, Position, Quaternion, FunctionResult
 from awtube.commanders import StreamCommander, MachineCommander
 import awtube.commands as commands
 from typing import Iterator, AsyncIterator
-from asyncio import AbstractEventLoop
+from asyncio import AbstractEventLoop, as_completed
 from awtube.cia402 import CIA402MachineState
 from awtube.command_receiver import CommandReceiver
 
@@ -72,96 +72,68 @@ class EnableFunction(RobotFunction):
         return await cia402_task_wrapper
 
 
-# class StreamCommandFunction(RobotFunction):
-#     """
-#         Stream functions, enable, stop, pause and run.
-#         Stop and pause force the feedrate to 0.
-#     """
+class StreamCommandFunction(RobotFunction):
+    """
+        Stream functions, enable, stop, pause and run.
+        Stop and pause force the feedrate to 0.
+    """
 
-#     def __init__(self,
-#                  stream_commander: StreamCommander,
-#                  receiver: CommandReceiver) -> None:
-#         self._stream_commander = stream_commander
-#         self._receiver = receiver
+    def __init__(self,
+                 stream_controller: controllers.StreamController,
+                 receiver: CommandReceiver) -> None:
+        self._stream_controller = stream_controller
+        self._receiver = receiver
 
-#     def __call_cmd(self, command: types.StreamCommandType):
-#         cmd = commands.StreamCommand(self._receiver,
-#                                      command=command)
-#         self._stream_commander.add_command_at_beginning(cmd)
+    def __call_cmd(self, command: types.StreamCommandType):
+        cmd = commands.StreamCommand(self._receiver,
+                                     command=command)
+        self._stream_controller.schedule_first(cmd)
 
-#     def stop_stream(self) -> None:
-#         """ Stop stream. """
-#         self.__call_cmd(types.StreamCommandType.STOP)
+    def stop_stream(self) -> None:
+        """ Stop stream. """
+        self.__call_cmd(types.StreamCommandType.STOP)
 
-#     def pause_stream(self) -> None:
-#         """ Pause stream. """
-#         self.__call_cmd(types.StreamCommandType.PAUSE)
+    def pause_stream(self) -> None:
+        """ Pause stream. """
+        self.__call_cmd(types.StreamCommandType.PAUSE)
 
-#     def run_stream(self) -> None:
-#         """ Run stream. """
-#         self.__call_cmd(types.StreamCommandType.RUN)
+    def run_stream(self) -> None:
+        """ Run stream. """
+        self.__call_cmd(types.StreamCommandType.RUN)
 
 
-# class MoveJointsInterpolatedFunction(RobotFunction):
-#     """ Robot function to move robot with a trajectory, where GBC interpolates intermediate points."""
+class MoveJointsInterpolatedFunction(RobotFunction):
+    """ Robot function to move robot with a trajectory, where GBC interpolates intermediate points."""
 
-#     def __init__(self,
-#                  stream_commander: StreamCommander,
-#                  receiver: CommandReceiver,
-#                  #  loop: AbstractEventLoop
-#                  ) -> None:
-#         self._stream_commander = stream_commander
-#         self._receiver = receiver
-#         self._loop = self.tloop.loop
+    def __init__(self,
+                 stream_controller: controllers.StreamController,
+                 receiver: CommandReceiver,
+                 ) -> None:
+        self._stream_commander = stream_controller
+        self._receiver = receiver
 
-#     def move_joints_interpolated_gen(self, points) -> Iterator[FunctionResult]:
-#         """ Async generator used to send a moveLine command to a CommandReceiver and recieve feedback on points done.
-#         Args:
-#             translation (tp.Dict[str, float]): dict of translation x, y, z
-#             rotation (tp.Dict[str, float]): Dict of rotation, a quaternion: x, y, z, w
-#             tag (int, optional): tag(id) with which to send the command to the robot. Defaults to 0.
-#         """
-#         asyncio_generator = self.move_joints_interpolated_async_gen(points)
+    def move_joints_interpolated(self, points) -> None:
+        """ Send a moveLine command to a CommandReceiver
+        Args:
+            translation (tp.Dict[str, float]): dict of translation x, y, z
+            rotation (tp.Dict[str, float]): Dict of rotation, a quaternion: x, y, z, w
+            tag (int, optional): tag(id) with which to send the command to the robot. Defaults to 0.
+        """
+        self.tloop.post_wait(self.move_joints_interpolated_async(points))
 
-#         async def execut():
-#             next_task = await anext(asyncio_generator)
-#             return await next_task
+    async def move_joints_interpolated_async(self, points) -> None:
+        """ Send a moveLine command to a CommandReceiver
+        Args:
+            translation (tp.Dict[str, float]): dict of translation x, y, z
+            rotation (tp.Dict[str, float]): Dict of rotation, a quaternion: x, y, z, w
+            tag (int, optional): tag(id) with which to send the command to the robot. Defaults to 0.
+        """
+        cmds = [commands.MoveJointsInterpolatedCommand(
+                receiver=self._receiver,
+                joint_positions=pt.positions,
+                joint_velocities=pt.velocities) for pt in points]
 
-#         while True:
-#             try:
-#                 fut = asyncio.run_coroutine_threadsafe(
-#                     execut(), loop=self._loop)
-#                 yield fut.result()
-#             except StopAsyncIteration:
-#                 break
-
-#     def move_joints_interpolated(self, points) -> None:
-#         """ Send a moveLine command to a CommandReceiver
-#         Args:
-#             translation (tp.Dict[str, float]): dict of translation x, y, z
-#             rotation (tp.Dict[str, float]): Dict of rotation, a quaternion: x, y, z, w
-#             tag (int, optional): tag(id) with which to send the command to the robot. Defaults to 0.
-#         """
-#         self._loop.run_until_complete(
-#             self.move_joints_interpolated_async_gen(points))
-
-#     async def move_joints_interpolated_async_gen(self, points) -> AsyncIterator[asyncio.Task]:
-#         """ Generator used to send MoveJointsInterpolatedCommands to the reciever and yield
-#             asyncio.Tasks that give feedback on the execution of these commands.
-#         Args:
-#             translation (tp.Dict[str, float]): dict of translation x, y, z
-#             rotation (tp.Dict[str, float]): Dict of rotation, a quaternion: x, y, z, w
-#             tag (int, optional): tag(id) with which to send the command to the robot. Defaults to 0.
-#         """
-#         for pt in points:
-#             cmd = commands.MoveJointsInterpolatedCommand(
-#                 receiver=self._receiver,
-#                 joint_positions=pt.positions,
-#                 joint_velocities=pt.velocities)
-#             self._stream_commander.add_command(cmd)
-
-#         async for task in self._stream_commander.execute_commands():
-#             yield task
+        return await self._stream_controller.schedule_last(cmds)
 
 
 class MoveLineFunction(RobotFunction):

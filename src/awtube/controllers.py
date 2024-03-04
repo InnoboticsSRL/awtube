@@ -5,16 +5,13 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
 import time
-import copy
 import asyncio
 import queue
-from queue import Queue
 import logging
 from contextlib import suppress
 from enum import IntEnum
 from typing import AsyncGenerator, Callable, NamedTuple
 
-from sympy import false, true
 from awtube import command_receiver
 from awtube import observers
 
@@ -77,6 +74,10 @@ class Controller(ABC):
                 'Could not stop main loop of %s', self.__class__.__name__)
             raise
 
+    def clear_queue(self) -> None:
+        """ Clear current queue. """
+        self._command_queue.queue.clear()
+
     def schedule_last(self, command) -> task_wrappers.TaskWrapper:
         """ Schedule command after others already in queue. """
         task = self._get_task(command=command)
@@ -97,12 +98,13 @@ class Controller(ABC):
 
     async def _run(self) -> None:
         while True:
-            # TODO: how many times should it try
+
             if not self._logger:
                 self._logger.error('No logger defined for controller!')
                 await asyncio.sleep(1)
                 continue
 
+            # TODO: how many times should it try
             if self._observer.payload is None:
                 self._logger.error('%s is not updated!',
                                    type(self._observer).__name__)
@@ -113,7 +115,6 @@ class Controller(ABC):
                 await asyncio.sleep(0.5)
             else:
                 _, task = self._command_queue.get(block=False)
-
                 await task.start()
 
 
@@ -143,15 +144,20 @@ class MachineController(Controller):
     def _get_task(self, command) -> None | task_wrappers.TaskWrapper:
         if isinstance(command, commands.HeartbeatCommad):
             return task_wrappers.PeriodicTask(
-                coro=self._heartbeat_callback, args=(command), sleep_time=1/self._heartbeat_freq)
+                coro=self._heartbeat_callback,
+                args=(command),
+                sleep_time=1/self._heartbeat_freq)
 
         elif isinstance(command, commands.KinematicsConfigurationCommad):
             return task_wrappers.OneTimeTask(
-                coro=self._kc_callback, args=(command))
+                coro=self._kc_callback,
+                args=(command))
 
         elif isinstance(command, commands.MachineStateCommad):
             return task_wrappers.PeriodicUntilDoneTask(
-                coro=self._machine_state_callback, args=(command), sleep_time=1)
+                coro=self._machine_state_callback,
+                args=(command),
+                sleep_time=1)
 
         else:
             self._logger.error(
@@ -215,50 +221,59 @@ class StreamController(Controller):
         self._min_stream_capacity = min_stream_capacity
         self._observer: StreamObserver = stream_observer
         self._command_queue: queue.Queue[Command] = queue.Queue()
+        self._current_tag = 0
 
         # single cmd
         self._single_cmd_running = False
 
     def _get_task(self, command) -> None | task_wrappers.TaskWrapper:
         if isinstance(command,
-                      (commands.MoveLineCommand,
-                       commands.MoveJointsCommand,
-                       commands.MoveToPositionCommand,
-                       commands.StreamCommand)):
+                      (
+                          commands.MoveLineCommand,
+                          commands.MoveJointsCommand,
+                          commands.MoveToPositionCommand,
+                          commands.StreamCommand
+                      )):
             return task_wrappers.PeriodicUntilDoneTask(
-                coro=self._single_cmd_callback, args=(command), sleep_time=0.5)
+                coro=self._single_move_cmd_callback,
+                args=(command),
+                sleep_time=0.5)
+        elif isinstance(command,
+                        (commands.StreamCommand)):
+            return task_wrappers.OneTimeTask(
+                coro=self._stream_cmd_callback,
+                args=(command))
+        elif isinstance(command,
+                        list):
+            return task_wrappers.PeriodicUntilDoneTask(
+                coro=self._multi_move_interpolated_cmd_callback,
+                args=(command),
+                # this task is high priority ! (this task can cause jitter)
+                sleep_time=0.05)
         else:
             self._logger.error(
                 'This controller cannot handle commands of type: %s', type(command))
 
-    def _current_tag(self) -> None | int:
-        """ 
-            Returns latest stream tag from stream observer.
-            If stream server not updated returns None. 
-        """
-        if self._observer.payload:
-            return self._observer.payload.tag
+    async def _stream_cmd_callback(self, cmd: None | commands.Command) -> None | TaskWrapperResult:
+        if cmd.command_type is types.StreamCommandType.STOP:
+            self.clear_queue()
+            cmd.execute()
+        if cmd.command_type is types.StreamCommandType.PAUSE:
+            cmd.execute()
+        if cmd.command_type is types.StreamCommandType.RUN:
+            cmd.execute()
 
-    async def _single_cmd_callback(self, cmd: None | commands.Command) -> None | TaskWrapperResult:
-
+    async def _single_move_cmd_callback(self, cmd: None | commands.Command) -> None | TaskWrapperResult:
         if not self._single_cmd_running:
-            self._logger.debug('Sending single cmd %s', type(cmd).__name__)
+            cmd.tag = self._current_tag + 1
+            self._logger.debug('Sending single cmd: %s with tag: %d', type(
+                cmd).__name__, cmd.tag)
 
-            cmd.tag = self._current_tag() + 1
             if self._observer.payload.capacity >= self._min_stream_capacity:
-
-                if isinstance(cmd, commands.StreamCommand):
-                    if cmd.command_type is types.StreamCommandType.STOP:
-                        self._command_queue.queue.clear()
-                        cmd.execute()
-                        return TaskWrapperResult.SUCCESS
-                    if cmd.command_type is types.StreamCommandType.PAUSE:
-                        cmd.execute()
-                        return TaskWrapperResult.SUCCESS
-                else:
-                    cmd.execute()
-                    self._single_cmd_running = True
-                    return TaskWrapperResult.RUNNING
+                cmd.execute()
+                self._current_tag = cmd.tag
+                self._single_cmd_running = True
+                return TaskWrapperResult.RUNNING
             else:
                 return TaskWrapperResult.RUNNING
 
@@ -269,3 +284,24 @@ class StreamController(Controller):
                 return TaskWrapperResult.SUCCESS
             else:
                 return TaskWrapperResult.RUNNING
+
+    async def _multi_move_interpolated_cmd_callback(self, cmd_list: None | list[commands.Command]) -> None | TaskWrapperResult:
+        if self._observer.payload.capacity >= self._min_stream_capacity:
+            self._logger.info('Capacity: %d', self._observer.payload.capacity)
+            try:
+                cmd = cmd_list.pop(0)
+            except IndexError:
+                # check if execution has finished
+                return TaskWrapperResult.SUCCESS
+                # if self._observer.payload.tag == cmd.tag and self._observer.payload.state == StreamState.IDLE:
+                #     return TaskWrapperResult.SUCCESS
+                # else:
+                #     return TaskWrapperResult.RUNNING
+
+            cmd.tag = self._current_tag + 1
+            self._logger.debug('Sending single moveJointsInterpolated cmd: %s with tag: %d', type(
+                cmd).__name__, cmd.tag)
+            cmd.execute()
+            self._current_tag = cmd.tag
+
+        return TaskWrapperResult.RUNNING

@@ -75,4 +75,4 @@ class ThreadLoop(Thread):
 
 
 # singleton
-# threadloop = ThreadLoop()
+threadloop = ThreadLoop()

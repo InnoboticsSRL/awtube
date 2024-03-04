@@ -11,6 +11,9 @@ import asyncio
 from enum import IntEnum
 from contextlib import suppress
 
+from awtube.threadloop import ThreadLoop, threadloop
+
+
 # TODO: test if the stoping functionality for these tasks is working as expected
 
 
@@ -28,7 +31,7 @@ class TaskWrapper(ABC):
     args = None
     is_started = False
     _task = None
-    _future = asyncio.Future()
+    _future = asyncio.Future(loop=threadloop.loop)
 
     def is_running(self):
         return not self._future.done()
@@ -80,7 +83,7 @@ class PeriodicTask(TaskWrapper):
         self.coro = coro
         self.args = args
         self.sleep_time = sleep_time
-        self._future = asyncio.Future()
+        self._future = asyncio.Future(loop=threadloop.loop)
 
     async def _run(self):
         res = TaskWrapperResult.RUNNING
@@ -94,7 +97,7 @@ class PeriodicUntilDoneTask(PeriodicTask):
     """ Wrapps task that run periodically until results is success or failure"""
 
     def __init__(self, coro, args, sleep_time):
-        self._future = asyncio.Future()
+        self._future = asyncio.Future(loop=threadloop.loop)
         super().__init__(coro, args, sleep_time)
 
     async def _run(self):
