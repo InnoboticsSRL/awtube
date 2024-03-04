@@ -5,30 +5,11 @@
 from abc import ABC
 import typing as tp
 import logging
-import asyncio
-import time
 
-import awtube.logging_config
 
-import awtube.types as types
-import awtube.commands as commands
-from awtube.types import Pose, Position, Quaternion, FunctionResult
-from awtube.commanders import StreamCommander, MachineCommander
-import awtube.commands as commands
-from typing import Iterator, AsyncIterator
-from asyncio import AbstractEventLoop, as_completed
-from awtube.cia402 import CIA402MachineState
-from awtube.command_receiver import CommandReceiver
+from . import controllers, types, cia402, command_receiver, commands
 
-import awtube.controllers as controllers
-import awtube.commands as commands
-
-import awtube.logging_config
-
-# TODO: improve the logger
 _logger = logging.getLogger(__name__)
-
-# TODO: sync wrapper for async functions ?
 
 
 class RobotFunction(ABC):
@@ -36,12 +17,12 @@ class RobotFunction(ABC):
     pass
 
 
-class EnableFunction(RobotFunction):
+class MachineFunctions(RobotFunction):
     """ Enable connection with GBC. """
 
     def __init__(self,
                  machine_controller: controllers.MachineController,
-                 receiver: CommandReceiver,
+                 receiver: command_receiver.CommandReceiver,
                  ) -> None:
         self._machine_controller = machine_controller
         self._receiver = receiver
@@ -50,8 +31,27 @@ class EnableFunction(RobotFunction):
     # def reset(self) -> None:
     #     """ Reset faults with GBC, commanding to go to SWITCHED_ON state. """
     #     cmd = commands.MachineStateCommad(self._receiver,
-    #                              desired_state=CIA402MachineState.SWITCHED_ON)
+    #                                       desired_state=cia402.CIA402MachineState.SWITCHED_ON)
     #     self._machine_commander.add_command(cmd)
+
+    def reset(self) -> None:
+        """ Enable connection with GBC, commanding to go to OPERATION_ENABLED state. """
+        self.tloop.post_wait(self.reset_async())
+        _logger.debug('Robot is reset!')
+
+    async def reset_async(self) -> None:
+        """ Enable connection with GBC, commanding to go to OPERATION_ENABLED state async"""
+        self._machine_controller.schedule_first(
+            commands.HeartbeatCommad(self._receiver, frequency=1))
+        # self._machine_controller.schedule_last(
+        #     commands.MachineStateCommad(self._receiver,
+        #                                 desired_state=cia402.CIA402MachineState.FAULT))
+        # self._machine_controller.schedule_last(
+        #     commands.IoutCommad(self._receiver, 10878720, override=True))
+        switch_on_disabled = self._machine_controller.schedule_last(
+            commands.MachineStateCommad(self._receiver,
+                                        desired_state=cia402.CIA402MachineState.SWITCH_ON_DISABLED))
+        return await switch_on_disabled
 
     def enable(self) -> None:
         """ Enable connection with GBC, commanding to go to OPERATION_ENABLED state. """
@@ -59,16 +59,12 @@ class EnableFunction(RobotFunction):
         _logger.debug('Robot is enabled!')
 
     async def enable_async(self) -> None:
-        """ Enable connection with GBC, commanding to go to OPERATION_ENABLED state. """
-        ht_task = self._machine_controller.schedule_first(
-            commands.HeartbeatCommad(self._receiver, 0))
-
-        # TODO: We should be able to know that the periodic
-        # heartbeat task is running
-        # await ht_task.task
-
-        cia402_task_wrapper = self._machine_controller.schedule_last(commands.MachineStateCommad(self._receiver,
-                                                                                                 desired_state=CIA402MachineState.OPERATION_ENABLED))
+        """ Enable connection with GBC, commanding to go to OPERATION_ENABLED state async"""
+        # self._machine_controller.schedule_first(
+        #     commands.HeartbeatCommad(self._receiver, frequency=1))
+        cia402_task_wrapper = self._machine_controller.schedule_last(
+            commands.MachineStateCommad(self._receiver,
+                                        desired_state=cia402.CIA402MachineState.OPERATION_ENABLED))
         return await cia402_task_wrapper
 
 
@@ -80,54 +76,44 @@ class StreamCommandFunction(RobotFunction):
 
     def __init__(self,
                  stream_controller: controllers.StreamController,
-                 receiver: CommandReceiver) -> None:
+                 receiver: command_receiver.CommandReceiver) -> None:
         self._stream_controller = stream_controller
         self._receiver = receiver
 
-    def __call_cmd(self, command: types.StreamCommandType):
+    def __cmd(self, command: types.StreamCommandType):
         cmd = commands.StreamCommand(self._receiver,
                                      command=command)
         self._stream_controller.schedule_first(cmd)
 
     def stop_stream(self) -> None:
         """ Stop stream. """
-        self.__call_cmd(types.StreamCommandType.STOP)
+        self.__cmd(types.StreamCommandType.STOP)
 
     def pause_stream(self) -> None:
         """ Pause stream. """
-        self.__call_cmd(types.StreamCommandType.PAUSE)
+        self.__cmd(types.StreamCommandType.PAUSE)
 
     def run_stream(self) -> None:
-        """ Run stream. """
-        self.__call_cmd(types.StreamCommandType.RUN)
+        """ Run stream. Used after pausing."""
+        self.__cmd(types.StreamCommandType.RUN)
 
 
 class MoveJointsInterpolatedFunction(RobotFunction):
-    """ Robot function to move robot with a trajectory, where GBC interpolates intermediate points."""
+    """ Robot function to move robot with a trajectory, where GBC interpolates intermediate points. """
 
     def __init__(self,
                  stream_controller: controllers.StreamController,
-                 receiver: CommandReceiver,
+                 receiver: command_receiver.CommandReceiver,
                  ) -> None:
         self._stream_commander = stream_controller
         self._receiver = receiver
 
     def move_joints_interpolated(self, points) -> None:
-        """ Send a moveLine command to a CommandReceiver
-        Args:
-            translation (tp.Dict[str, float]): dict of translation x, y, z
-            rotation (tp.Dict[str, float]): Dict of rotation, a quaternion: x, y, z, w
-            tag (int, optional): tag(id) with which to send the command to the robot. Defaults to 0.
-        """
+        """ Send a moveLine command to a command_receiver.CommandReceiver. """
         self.tloop.post_wait(self.move_joints_interpolated_async(points))
 
     async def move_joints_interpolated_async(self, points) -> None:
-        """ Send a moveLine command to a CommandReceiver
-        Args:
-            translation (tp.Dict[str, float]): dict of translation x, y, z
-            rotation (tp.Dict[str, float]): Dict of rotation, a quaternion: x, y, z, w
-            tag (int, optional): tag(id) with which to send the command to the robot. Defaults to 0.
-        """
+        """ Send a moveLine command. """
         cmds = [commands.MoveJointsInterpolatedCommand(
                 receiver=self._receiver,
                 joint_positions=pt.positions,
@@ -139,7 +125,7 @@ class MoveJointsInterpolatedFunction(RobotFunction):
 class MoveLineFunction(RobotFunction):
     def __init__(self,
                  stream_controller: controllers.StreamController,
-                 receiver: CommandReceiver,
+                 receiver: command_receiver.CommandReceiver,
                  ) -> None:
         self._logger = logging.getLogger(self.__class__.__name__)
         self._stream_controller = stream_controller
@@ -148,12 +134,11 @@ class MoveLineFunction(RobotFunction):
     def move_line(self,
                   translation: tp.Dict[str, float],
                   rotation: tp.Dict[str, float]) -> None:
-        """ Send a moveLine command to a CommandReceiver, but a blocking call.
+        """ Send a moveLine command to a command_receiver.CommandReceiver, but a blocking call.
 
         Args:
-            translation (tp.Dict[str, float]): dict of translation x, y, z
-            rotation (tp.Dict[str, float]): Dict of rotation, a quaternion: x, y, z, w
-            tag (int, optional): tag(id) with which to send the command to the robot. Defaults to 0.
+            translation (tp.Dict[str, float]): {'x', 'y', 'z'}
+            rotation (tp.Dict[str, float]): Quaternion {'x', 'y', 'z', 'w'}
         """
         self.tloop.post_wait(self.move_line_async(translation,
                                                   rotation))
@@ -161,13 +146,12 @@ class MoveLineFunction(RobotFunction):
 
     async def move_line_async(self,
                               translation: tp.Dict[str, float],
-                              rotation: tp.Dict[str, float]) -> FunctionResult:
-        """ Send a moveLine command to a CommandReceiver.
+                              rotation: tp.Dict[str, float]) -> types.FunctionResult:
+        """ Send a moveLine command to a command_receiver.CommandReceiver.
 
         Args:
-            translation (tp.Dict[str, float]): dict of translation x, y, z
-            rotation (tp.Dict[str, float]): Dict of rotation, a quaternion: x, y, z, w
-            tag (int, optional): tag(id) with which to send the command to the robot. Defaults to 0.
+            translation (tp.Dict[str, float]): {'x', 'y', 'z'}
+            rotation (tp.Dict[str, float]): Quaternion {'x', 'y', 'z', 'w'}
         """
         cmd = commands.MoveLineCommand(
             self._receiver, translation, rotation)
@@ -178,7 +162,7 @@ class MoveLineFunction(RobotFunction):
 # class MoveToPositioinFunction(RobotFunction):
 #     """ Send moveToPosition command. """
 
-#     def __init__(self, stream_commander: StreamCommander, receiver: CommandReceiver) -> None:
+#     def __init__(self, stream_commander: StreamCommander, receiver: command_receiver.CommandReceiver) -> None:
 #         self._stream_commander = stream_commander
 #         self._receiver = receiver
 
@@ -186,7 +170,7 @@ class MoveLineFunction(RobotFunction):
 #                                translation: tp.Dict[str, float],
 #                                rotation: tp.Dict[str, float],
 #                                tag: int = 0) -> None:
-#         """ Send a moveLine command to a CommandReceiver.
+#         """ Send a moveLine command to a command_receiver.CommandReceiver.
 
 #         Args:
 #             translation (tp.Dict[str, float]): dict of translation x, y, z

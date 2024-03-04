@@ -3,7 +3,8 @@
 """ Interface used to implement the commander pattern. """
 
 from abc import ABC, abstractmethod
-from awtube.commands.command import Command
+
+from .commands.command import Command
 
 
 class Commander(ABC):

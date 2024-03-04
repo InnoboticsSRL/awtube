@@ -64,12 +64,10 @@ class StreamCommandBuilder(Builder):
         )
 
     def kinematics_configuration(self, value: int) -> StreamCommandBuilder:
-        """ Set kinematics configuration id for message. """
         self._kc = value
         return self
 
     def disable_limits(self, value: bool = False) -> StreamCommandBuilder:
-        """ Add kinematics configuration command with disableLimits flag. """
         self.command = {
             "kinematicsConfiguration": {
                 f"{self._kc}": {
@@ -80,7 +78,6 @@ class StreamCommandBuilder(Builder):
         return self
 
     def heartbeat(self, value: int) -> StreamCommandBuilder:
-        """ Add heartbeat command. """
         self.command = {
             "machine": {
                 f"{self._machine}": {
@@ -91,7 +88,6 @@ class StreamCommandBuilder(Builder):
         return self
 
     def desired_feedrate(self, value: float) -> StreamCommandBuilder:
-        """ Add feedrate command. """
         self.command = {
             "kinematicsConfiguration": {
                 f"{self._kc}": {
@@ -102,15 +98,24 @@ class StreamCommandBuilder(Builder):
         return self
 
     def stream_command(self, value: StreamCommandType) -> StreamCommandBuilder:
-        """  Stream command. """
         self.command = {"stream": {
             "0": {
                 "command": {
                     "streamCommand": int(value)}}}}
         return self
 
+    def iout(self, value: int, override: bool = True) -> StreamCommandBuilder:
+        self.command = {
+            "iout": {
+                f"{self._machine}": {
+                    "command": {
+                        "setValue": value,
+                        "override": override
+                    }
+                }}}
+        return self
+
     def machine_target(self, value: int) -> StreamCommandBuilder:
-        """ Add machine target command. """
         self.command = {
             "kinematicsConfiguration": {
                 f"{self._machine}": {
@@ -121,7 +126,6 @@ class StreamCommandBuilder(Builder):
         return self
 
     def control_word(self, value: int) -> StreamCommandBuilder:
-        """ Add control word command. """
         self.command = {
             "machine": {
                 f"{self._machine}": {

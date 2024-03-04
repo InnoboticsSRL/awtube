@@ -13,29 +13,14 @@
 from __future__ import annotations
 import asyncio
 import logging
-import concurrent.futures
-import threading
-from awtube import threadloop
 
-from awtube.command_receiver import CommandReceiver, WebsocketThread
-from awtube.commanders import StreamCommander, MachineCommander
-from awtube.observers import StreamObserver, TelemetryObserver, StatusObserver
-import awtube.robot_functions as robot_functions
-from awtube.types import MachineTarget
-
-import awtube.commands as commands
-
-import awtube.controllers as controllers
-
-import awtube.logging_config
-
-from awtube.threadloop import ThreadLoop, threadloop
+from . import command_receiver, observers, robot_functions, threadloop, controllers
 
 
 class Robot(
         robot_functions.MoveJointsInterpolatedFunction,
         robot_functions.MoveLineFunction,
-        robot_functions.EnableFunction,
+        robot_functions.MachineFunctions,
         # robot_functions.MoveToPositioinFunction,
         robot_functions.StreamCommandFunction
 ):
@@ -50,23 +35,10 @@ class Robot(
                  name: str = "AWTube",
                  log_level: int | str = logging.INFO,
                  logger: logging.Logger | None = None):
-        # thread
-        # threading.Thread.__init__(self)
-        # self.daemon = True
-
-        # self._logger = logging.getLogger(self.__class__.__name__)
-
-        # loop
-        # self.loop: asyncio.AbstractEventLoop = asyncio.new_event_loop()
-        # asyncio.set_event_loop(self.loop)
-
-        # self.tloop = ThreadLoop()
-        self.tloop = threadloop
+        self.tloop = threadloop.threadloop
         self.tloop.start()
 
         self.killed: bool = False
-
-        # self.executor = concurrent.futures.ThreadPoolExecutor()
 
         # robot properties
         self._name = name
@@ -74,20 +46,19 @@ class Robot(
         self._port = port
 
         # logging
-        # to do fix logging level
         self._log_level = log_level
         self._logger = logging.getLogger(
             self.__class__.__name__) if logger is None else logger
         self._logger.setLevel(self._log_level)
 
         # Command receiver
-        self.receiver: CommandReceiver = WebsocketThread(
+        self.receiver = command_receiver.WebsocketThread(
             f"ws://{self._robot_ip}:{self._port}/ws")
 
         # Observers
-        self.stream_observer = StreamObserver()
-        self.telemetry_observer = TelemetryObserver()
-        self.status_observer = StatusObserver()
+        self.stream_observer = observers.StreamObserver()
+        self.telemetry_observer = observers.TelemetryObserver()
+        self.status_observer = observers.StatusObserver()
 
         # Commanders
         self.stream_controller = controllers.StreamController(
@@ -113,10 +84,10 @@ class Robot(
         #                                                  self.stream_controller,
         #                                                  self.receiver
         #                                                  )
-        robot_functions.EnableFunction.__init__(self,
-                                                self.machine_controller,
-                                                self.receiver
-                                                )
+        robot_functions.MachineFunctions.__init__(self,
+                                                  self.machine_controller,
+                                                  self.receiver
+                                                  )
         robot_functions.StreamCommandFunction.__init__(self,
                                                        self.stream_controller,
                                                        self.receiver
@@ -148,7 +119,6 @@ class Robot(
         """ Cancel tasks and stop loop from sync, threadsafe """
         self._logger.debug('Killing robot.')
         self.killed = True
-        # asyncio.run_coroutine_threadsafe(self.stop_loop(), self.loop)
         self.tloop.post_wait(self.stop_loop())
         self.tloop.stop()
 
@@ -161,14 +131,7 @@ class Robot(
         ]
         for task in tasks:
             task.cancel()
-
         await asyncio.gather(*tasks, return_exceptions=True)
-        # self.loop.stop()
-        # self.join()
-
-    # async def startup_async(self) -> None:
-    #     """ Start the whole process of listening and commanding. """
-    #     await asyncio.gather(self.receiver.listen())
 
     def startup(self) -> bool:
         """
@@ -176,10 +139,7 @@ class Robot(
             Run the procedure and return when the 
             robot is ready to take new commands.
         """
-        # self.start()
-        # self.loop.call_soon_threadsafe(self.run())
         self.tloop.post(self.receiver.listen())
         self.tloop.post(self.stream_controller.start())
         self.tloop.post(self.machine_controller.start())
-
         return True

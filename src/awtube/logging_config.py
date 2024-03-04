@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-    Contains the config dict for the the loggers.
+    Config dict for loggers.
 """
 
 import logging.config

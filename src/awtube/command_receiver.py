@@ -9,9 +9,7 @@ import logging
 import queue
 import asyncio
 
-import awtube.logging_config
-
-from awtube.observers import Observer
+from .observers import Observer
 
 
 class CommandReceiver(ABC):
@@ -64,7 +62,6 @@ class WebsocketThread(
         self._rate = 1/self.__freq
 
         self.killed: bool = False
-        # self.outgoing = queue.Queue(maxsize=10)
         self.outgoing = queue.Queue()
         # coroutines to be run asynchronously later they get the websocket as argument
         self._tasks = [self.listen_queue, self.listen_socket]

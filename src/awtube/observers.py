@@ -12,8 +12,6 @@ import logging
 from awtube.types import JointStates, StreamStatus, Status
 import awtube.errors as errors
 
-import awtube.logging_config
-
 
 class Observer(ABC):
     """
@@ -36,12 +34,7 @@ class Observer(ABC):
 
     @abstractmethod
     def update(self, message: object) -> None:
-        """
-        Receive update from subject.
-
-        Raises:
-            NotImplementedError: _description_
-        """
+        """ Receive update from subject and update payload. """
         raise NotImplementedError
 
 
@@ -54,18 +47,15 @@ class StatusObserver(Observer):
         self._logger = logging.getLogger(self.__class__.__name__)
 
     def update(self, message: str) -> None:
-        """
-        Recieve message, update payload
-        """
         try:
-            # update payload
             js = json.loads(message)
             self._payload = Status(**js['status'])
             self._timestamp = time.time()
 
             # check reported errors and log
-            # if self._payload.machine.operation_error != errors.OperationError.NONE:
-            #     self._logger.error(self._payload.machine.operation_error)
+
+            if self._payload.machine.operation_error != errors.OperationError.NONE:
+                self._logger.error(self._payload.machine.operation_error)
 
         except KeyError as ke:
             # this means message doesn't contain status
@@ -83,15 +73,12 @@ class StreamObserver(Observer):
         self._logger = logging.getLogger(self.__class__.__name__)
 
     def update(self, message: str) -> None:
-        """
-        Recieve message, update payload
-        """
         try:
             js = json.loads(message)
             # TODO: stream array id ??????
             self._payload = StreamStatus(**js['stream'][0])
             self._timestamp = time.time()
-        except KeyError as ke:
+        except KeyError:
             # this means message doesn't contain stream
             pass
             # self._logger.error(ke)
@@ -108,12 +95,6 @@ class TelemetryObserver(Observer):
         self._logger = logging.getLogger(self.__class__.__name__)
 
     def update(self, message: str) -> None:
-        """
-        Recieve update from subject and decode message.
-
-        Raises:
-            NotImplementedError:
-        """
         try:
             js = json.loads(message)
             # TODO: stream array id ??????
@@ -137,14 +118,10 @@ class TelemetryObserver(Observer):
                         torques=[joint_i['t'] for joint_i in js['telemetry'][-1]['act']])
                 }
 
-                # record timestamp
                 self._timestamp = time.time()
 
-        except KeyError as ke:
+        except KeyError:
             # this means message doesn't contain telemetry
             pass
         except Exception:
             self._logger.warn('No telemetry available.')
-            # self._logger.error(e)
-            # print(e)
-            # print('Not recieving any telemetry!')

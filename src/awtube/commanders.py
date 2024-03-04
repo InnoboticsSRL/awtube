@@ -12,19 +12,8 @@ import logging
 from typing import AsyncGenerator
 from queue import Queue
 
-import awtube.logging_config
 
-import awtube.commands as commands
-import awtube.types as types
-from awtube.commands import Command, MachineStateCommad, HeartbeatCommad, \
-    KinematicsConfigurationCommad, MachineTargetCommad
-from awtube.observers import StreamObserver, StatusObserver
-from awtube.types import StreamState
-from awtube.types import FunctionResult
-from awtube.command_receiver import CommandReceiver
-from awtube.types import MachineTarget
-from awtube.cia402 import transition, device_state
-from awtube.errors import AwtubeError, AWTubeErrorException
+from . import command_receiver,  cia402,  types, errors, commands, observers
 
 
 class Commander(ABC):
@@ -34,7 +23,7 @@ class Commander(ABC):
     """
 
     @abstractmethod
-    def add_command(self, command: Command) -> None:
+    def add_command(self, command: commands.Command) -> None:
         """ Add commands to be sent """
         raise NotImplementedError
 
@@ -50,14 +39,14 @@ class StreamCommander(Commander):
     the logic of executing commands based on the stream capacity.
     """
 
-    def __init__(self, stream_observer: StreamObserver, capacity_min: int = 15) -> None:
+    def __init__(self, stream_observer: observers.StreamObserver, capacity_min: int = 15) -> None:
         """
         Initialize commands.
         """
         self._logger = logging.getLogger(self.__class__.__name__)
 
-        self._stream_observer: StreamObserver = stream_observer
-        self._command_queue: queue.Queue[Command] = queue.Queue()
+        self._stream_observer: observers.StreamObserver = stream_observer
+        self._command_queue: queue.Queue[commands.Command] = queue.Queue()
         self._capacity_min: int = capacity_min
         self.__tag = None
 
@@ -65,23 +54,23 @@ class StreamCommander(Commander):
         self._stream_observer_tentatives = 0
         self._stream_observer_max_tentatives = 10
 
-    def add_command(self, command: Command) -> None:
+    def add_command(self, command: commands.Command) -> None:
         """ Add commands to be sent. """
         self._command_queue.put(command)
 
-    def add_command_at_beginning(self, command: Command) -> None:
+    def add_command_at_beginning(self, command: commands.Command) -> None:
         """ 
             Add commands to be sent before all others,
             used for commands with higher priority.
         """
         self._command_queue.queue.appendleft(command)
 
-    async def wait_for_cmd_execution(self, command: Command) -> FunctionResult:
+    async def wait_for_cmd_execution(self, command: commands.Command) -> types.FunctionResult:
         command.execute()
 
         while True:
-            if self._stream_observer.payload.tag == command.tag and self._stream_observer.payload.state == StreamState.IDLE:
-                return FunctionResult.SUCCESS
+            if self._stream_observer.payload.tag == command.tag and self._stream_observer.payload.state == types.StreamState.IDLE:
+                return types.FunctionResult.SUCCESS
             await asyncio.sleep(0.2)
 
     async def execute_commands(self) -> AsyncGenerator[asyncio.Task]:
@@ -97,12 +86,12 @@ class StreamCommander(Commander):
                 break
 
             if self._stream_observer_tentatives >= self._stream_observer_max_tentatives:
-                raise Exception("Couldn't update StreamObserver.")
+                raise Exception("Couldn't update observers.StreamObserver.")
 
             if not self._stream_observer.payload:
                 self._stream_observer_tentatives += 1
                 await asyncio.sleep(0.1)
-                print('StreamObserver is None')
+                print('observers.StreamObserver is None')
                 continue
             else:
                 # get last tag from motion controller
@@ -111,7 +100,7 @@ class StreamCommander(Commander):
                 self._stream_observer_tentatives = 0
 
             if self._stream_observer.payload.capacity >= self._capacity_min:
-                cmd: Command = self._command_queue.get(block=False)
+                cmd: commands.Command = self._command_queue.get(block=False)
 
                 if isinstance(cmd, commands.StreamCommand):
                     if cmd.command_type is types.StreamCommand.STOP:
@@ -135,7 +124,7 @@ class MachineCommander(Commander):
     It sends a command to the receiver.
     """
 
-    def __init__(self, status_observer: StatusObserver,  heartbeat_freq: int = 1) -> None:
+    def __init__(self, status_observer: observers.StatusObserver,  heartbeat_freq: int = 1) -> None:
         """
             Initialize MachineCommander: Sends commands related to the functioning of the machine.
             send_commands() is a loop which continuosly checks the queue for new commands and sends
@@ -143,14 +132,14 @@ class MachineCommander(Commander):
             , physical limits and target(simulation or real) machine.
 
         Args:
-            status_observer (StatusObserver):
+            status_observer (observers.StatusObserver):
             heartbeat_freq (int, optional): The freq in Hz used to maintain the heartbeat. 
             Defaults to 1.
         """
         self._logger = logging.getLogger(self.__class__.__name__)
 
-        self._status_observer: StatusObserver = status_observer
-        self._command_queue: Queue[Command] = Queue()
+        self._status_observer: observers.StatusObserver = status_observer
+        self._command_queue: Queue[commands.Command] = Queue()
         self._heartbeat_freq: int = heartbeat_freq
         self._last_cmd_timestamp = time.time()
         self._receiver = None
@@ -163,7 +152,7 @@ class MachineCommander(Commander):
         # robot settables
         self._limits_disabled = False
         self._target_feed_rate = 1
-        self._target = MachineTarget.SIMULATION
+        self._target = types.MachineTarget.SIMULATION
 
         # target set procedure vars
         self._target_done = False
@@ -172,7 +161,7 @@ class MachineCommander(Commander):
 
     # receiver property
     @property
-    def receiver(self) -> CommandReceiver:
+    def receiver(self) -> command_receiver.CommandReceiver:
         return self._receiver
 
     @receiver.setter
@@ -189,8 +178,8 @@ class MachineCommander(Commander):
     def limits_disabled(self, value: bool) -> None:
         """ Set limits disabled flag. """
         if not isinstance(value, bool):
-            raise AWTubeErrorException(
-                AwtubeError.BAD_ARGUMENT, 'Limits disabled flag should be a bool type.')
+            raise errors.AWTubeErrorException(
+                errors.AwtubeError.BAD_ARGUMENT, 'Limits disabled flag should be a bool type.')
         self._limits_disabled = value
 
     # velocity property
@@ -203,27 +192,27 @@ class MachineCommander(Commander):
     def velocity(self, value: (float, int)) -> None:
         """ Set physical limits flag. Takes values from 0.0 to 2.2"""
         if not isinstance(value, (float, int)):
-            raise AWTubeErrorException(
-                AwtubeError.BAD_ARGUMENT, 'Velocity limits should be a float or int type.')
+            raise errors.AWTubeErrorException(
+                errors.AwtubeError.BAD_ARGUMENT, 'Velocity limits should be a float or int type.')
         self._target_feed_rate = value
 
     @property
-    def target(self) -> MachineTarget:
+    def target(self) -> types.MachineTarget:
         """ Get physical limits flag. """
         return self._target
 
     # target property
     @target.setter
-    def target(self, value: (float, int, MachineTarget)) -> None:
+    def target(self, value: (float, int, types.MachineTarget)) -> None:
         """ Set physical limits flag. Takes values from 0.0 to 2.2"""
-        if not isinstance(value, (float, int, MachineTarget)):
-            raise AWTubeErrorException(
-                AwtubeError.BAD_ARGUMENT, 'Velocity limits should be a float, int or MachineTarget type.')
-        self._target = MachineTarget(value)
+        if not isinstance(value, (float, int, types.MachineTarget)):
+            raise errors.AWTubeErrorException(
+                errors.AwtubeError.BAD_ARGUMENT, 'Velocity limits should be a float, int or types.MachineTarget type.')
+        self._target = types.MachineTarget(value)
         self._target_done = False
         self._target_set_attempts = 0
 
-    def add_command(self, command: Command) -> None:
+    def add_command(self, command: commands.Command) -> None:
         """ Add commands to be sent and update the receiver 
             to which we'll send the heartbeat command"""
         self._command_queue.put(command)
@@ -231,7 +220,7 @@ class MachineCommander(Commander):
     async def __resend_heartbeat(self) -> None:
         """ Resend last hearbeat back """
         if (time.time() - self._last_cmd_timestamp) > (1/self._heartbeat_freq):
-            cmd: HeartbeatCommad = HeartbeatCommad(
+            cmd: commands.MachineStateCommad = commands.MachineStateCommad(
                 receiver=self._receiver,
                 heartbeat=self._status_observer.payload.machine.heartbeat)
             cmd.execute()
@@ -243,7 +232,7 @@ class MachineCommander(Commander):
         """ Get next command from queue if not already executing one. """
         if not self._command_queue.empty() and not self._executing_cia402_command:
             # get new command to process
-            self._current_cmd: MachineStateCommad = self._command_queue.get(
+            self._current_cmd: commands.MachineStateCommad = self._command_queue.get(
                 block=False)
             self._executing_cia402_command = True
             self._logger.debug('Got new command from queue.')
@@ -254,7 +243,7 @@ class MachineCommander(Commander):
         if self._executing_cia402_command:
             await asyncio.sleep(0.1)
             # reset flags and return to accept new command from queue
-            cia402_state = device_state(
+            cia402_state = cia402.device_state(
                 self._status_observer.payload.machine.status_word)
             if cia402_state == self._current_cmd.desired_state:
                 self._logger.debug('New CIA402 state: %s.', cia402_state.value)
@@ -262,7 +251,7 @@ class MachineCommander(Commander):
                 return
 
             # every iteration send command
-            next_cw = transition(
+            next_cw = cia402.transition(
                 cia402_state,
                 self._current_cw,
                 fault_reset=True)
@@ -276,13 +265,13 @@ class MachineCommander(Commander):
 
         if self._status_observer.payload.kc[0].limits_disabled != self._limits_disabled:
             self._logger.debug('Resetting limits_disabled.')
-            cmd = KinematicsConfigurationCommad(self._receiver)
+            cmd = commands.KinematicsConfigurationCommad(self._receiver)
             cmd.disable_limits = self._limits_disabled
             cmd.execute()
 
         if self._status_observer.payload.kc[0].fro_target != self._target_feed_rate:
             self._logger.debug('Resetting target velocity.')
-            cmd = KinematicsConfigurationCommad(self._receiver)
+            cmd = commands.KinematicsConfigurationCommad(self._receiver)
             cmd.target_feed_rate = self._target_feed_rate
             cmd.execute()
         # check again after approximately 1 sec
@@ -295,7 +284,8 @@ class MachineCommander(Commander):
         """
         if self._status_observer.payload.machine.target != self._target and self._target_set_attempts < self._target_set_max_attempts:
             self._logger.debug('Resetting target.')
-            cmd = MachineTargetCommad(self.receiver, target=self._target)
+            cmd = commands.MachineTargetCommad(
+                self.receiver, target=self._target)
             cmd.execute()
             self._target_done = False
             self._target_set_attempts += 1

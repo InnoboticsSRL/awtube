@@ -2,7 +2,7 @@
 
 """ 
 Task wrappers, they wrap coroutines with tasks and control the how they are executed
-using TaskWrapperResult, also they chain these running tasks with futures which can 
+using TWrapperResult, also they chain these running tasks with futures which can 
 be used to await, check running or cancel these tasks.
 """
 
@@ -11,23 +11,27 @@ import asyncio
 from enum import IntEnum
 from contextlib import suppress
 
-from awtube.threadloop import ThreadLoop, threadloop
+from awtube.threadloop import threadloop
 
 
 # TODO: test if the stoping functionality for these tasks is working as expected
 
 
-class TaskWrapperResult(IntEnum):
-    """ Result of a TaskWrapper iteration """
+class TWrapperResult(IntEnum):
+    """ Result of a TWrapper iteration """
     NONE = 0
     RUNNING = 1
     FAILURE = 2
     SUCCESS = 3
 
 
-class TaskWrapper(ABC):
-    """ Asyncio task wrappers. """
-    coro = None
+class TWrapper(ABC):
+    """ 
+    Asyncio task wrapper interface.
+    Controls how a coroutine is run,
+    which constitutes the logic.
+    """
+    coro_callback = None
     args = None
     is_started = False
     _task = None
@@ -64,45 +68,45 @@ class TaskWrapper(ABC):
         pass
 
 
-class OneTimeTask(TaskWrapper):
-    """ Task Wrapper for a coroutine that runs only once"""
+class OneTimeTask(TWrapper):
+    """ Runs only once"""
 
-    def __init__(self, coro, args):
-        self.coro = coro
+    def __init__(self, coro_callback, args):
+        self.coro_callback = coro_callback
         self.args = args
         self.is_started = False
 
     async def _run(self):
-        return await self.coro(self.args)
+        return await self.coro_callback(self.args)
 
 
-class PeriodicTask(TaskWrapper):
-    """ Task Wrapper for a coroutine that runs periodically"""
+class PeriodicTask(TWrapper):
+    """ Run periodically """
 
-    def __init__(self, coro, args, sleep_time):
-        self.coro = coro
+    def __init__(self, coro_callback, args, sleep_time):
+        self.coro_callback = coro_callback
         self.args = args
         self.sleep_time = sleep_time
         self._future = asyncio.Future(loop=threadloop.loop)
 
     async def _run(self):
-        res = TaskWrapperResult.RUNNING
-        while res is not TaskWrapperResult.FAILURE:
-            res = await self.coro(self.args)
+        res = TWrapperResult.RUNNING
+        while res is not TWrapperResult.FAILURE:
+            res = await self.coro_callback(self.args)
             await asyncio.sleep(self.sleep_time)
         return res
 
 
 class PeriodicUntilDoneTask(PeriodicTask):
-    """ Wrapps task that run periodically until results is success or failure"""
+    """ Runs until result is success or failure"""
 
-    def __init__(self, coro, args, sleep_time):
+    def __init__(self, coro_callback, args, sleep_time):
         self._future = asyncio.Future(loop=threadloop.loop)
-        super().__init__(coro, args, sleep_time)
+        super().__init__(coro_callback, args, sleep_time)
 
     async def _run(self):
-        res = TaskWrapperResult.RUNNING
-        while res is TaskWrapperResult.RUNNING or res is None:
+        res = TWrapperResult.RUNNING
+        while res is TWrapperResult.RUNNING or res is None:
             await asyncio.sleep(self.sleep_time)
-            res = await self.coro(self.args)
+            res = await self.coro_callback(self.args)
         return res
