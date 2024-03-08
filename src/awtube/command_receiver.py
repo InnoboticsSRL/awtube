@@ -9,6 +9,8 @@ import logging
 import queue
 import asyncio
 
+from .threadloop import threadloop
+
 from .observers import Observer
 
 
@@ -36,8 +38,7 @@ class CommandReceiver(ABC):
 logging.getLogger("websockets.client").propagate = False
 
 
-class WebsocketThread(
-        CommandReceiver):
+class WebsocketThread(CommandReceiver):
     """ 
         Client for communicating on websockets
     """
@@ -91,11 +92,10 @@ class WebsocketThread(
         """ Listen to the websocket and local outgoing queue """
         try:
             async with websockets.connect(self.url, extra_headers=self.headers) as socket:
-                # gather all tasks defined in self._tasks
                 await asyncio.gather(*(task(socket) for task in self._tasks), return_exceptions=True)
                 # await asyncio.gather(*(task(socket) for task in self._tasks))
-        except ConnectionRefusedError:
-            self._logger.error('Connection refused!')
+        except Exception as e:
+            threadloop.register_exception(e)
 
     async def listen_socket(self, socket):
         """ Listen for messages on the socket, schedule tasks to handle """
@@ -117,3 +117,4 @@ class WebsocketThread(
     def put(self, message: str) -> None:
         """ Put message in the receivers queue. """
         self.outgoing.put(message)
+        # print(message)

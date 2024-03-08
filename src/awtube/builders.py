@@ -104,10 +104,32 @@ class StreamCommandBuilder(Builder):
                     "streamCommand": int(value)}}}}
         return self
 
-    def iout(self, value: int, override: bool = True) -> StreamCommandBuilder:
+    def iout(self, position: int, value: int, override: bool = True) -> StreamCommandBuilder:
         self.command = {
             "iout": {
-                f"{self._machine}": {
+                f"{position}": {
+                    "command": {
+                        "setValue": value,
+                        "override": override
+                    }
+                }}}
+        return self
+
+    def dout(self, position: int,value: int, override: bool = True) -> StreamCommandBuilder:
+        self.command = {
+            "dout": {
+                f"{position}": {
+                    "command": {
+                        "setValue": value,
+                        "override": override
+                    }
+                }}}
+        return self
+
+    def aout(self, position: int,value: int, override: bool = True) -> StreamCommandBuilder:
+        self.command = {
+            "aout": {
+                f"{position}": {
                     "command": {
                         "setValue": value,
                         "override": override

@@ -73,22 +73,22 @@ def transition(state, control_word, fault_reset=True) -> int:
 ###################################################################
 
 
-class MachineState(Enum):
-    UNKNOWN = "UNKNOWN"
-    FAULT_REACTION_ACTIVE = "FAULT_REACTION_ACTIVE"
-    FAULT = "FAULT"
-    NOT_READY_TO_SWITCH_ON = "NOT_READY_TO_SWITCH_ON"
-    SWITCH_ON_DISABLED = "SWITCH_ON_DISABLED"
-    READY_TO_SWITCH_ON = "READY_TO_SWITCH_ON"
-    SWITCHED_ON = "SWITCHED_ON"
-    OPERATION_ENABLED = "OPERATION_ENABLED"
-    QUICK_STOP = "QUICK_STOP"
+# class MachineState(Enum):
+#     UNKNOWN = "UNKNOWN"
+#     FAULT_REACTION_ACTIVE = "FAULT_REACTION_ACTIVE"
+#     FAULT = "FAULT"
+#     NOT_READY_TO_SWITCH_ON = "NOT_READY_TO_SWITCH_ON"
+#     SWITCH_ON_DISABLED = "SWITCH_ON_DISABLED"
+#     READY_TO_SWITCH_ON = "READY_TO_SWITCH_ON"
+#     SWITCHED_ON = "SWITCHED_ON"
+#     OPERATION_ENABLED = "OPERATION_ENABLED"
+#     QUICK_STOP = "QUICK_STOP"
 
 
-class DesiredState(Enum):
-    NONE = "NONE"
-    OPERATIONAL = "OPERATIONAL"
-    STANDBY = "STANDBY"
+# class DesiredState(Enum):
+#     NONE = "NONE"
+#     OPERATIONAL = "OPERATIONAL"
+#     STANDBY = "STANDBY"
 
 
 # def device_state(status: int) -> MachineState:
@@ -110,38 +110,38 @@ class DesiredState(Enum):
 #     return MachineState.UNKNOWN
 
 
-class PossibleTransitions:
-    @staticmethod
-    def fault_set() -> int:
-        return 0b10000000000000000
+# class PossibleTransitions:
+#     @staticmethod
+#     def fault_set() -> int:
+#         return 0b10000000000000000
 
-    @staticmethod
-    def fault_clear(control_word: int) -> int:
-        return control_word & 0b10111111
+#     @staticmethod
+#     def fault_clear(control_word: int) -> int:
+#         return control_word & 0b10111111
 
-    @staticmethod
-    def fault_reset() -> int:
-        return 0b10000000
+#     @staticmethod
+#     def fault_reset() -> int:
+#         return 0b10000000
 
-    @staticmethod
-    def shutdown() -> int:
-        return 0b00000110
+#     @staticmethod
+#     def shutdown() -> int:
+#         return 0b00000110
 
-    @staticmethod
-    def disable_voltage() -> int:
-        return 0b00000000
+#     @staticmethod
+#     def disable_voltage() -> int:
+#         return 0b00000000
 
-    @staticmethod
-    def switch_on() -> int:
-        return 0b00000111
+#     @staticmethod
+#     def switch_on() -> int:
+#         return 0b00000111
 
-    @staticmethod
-    def enable_operation() -> int:
-        return 0b00001111
+#     @staticmethod
+#     def enable_operation() -> int:
+#         return 0b00001111
 
-    @staticmethod
-    def quick_stop() -> int:
-        return 0b00000010
+#     @staticmethod
+#     def quick_stop() -> int:
+#         return 0b00000010
 
 
 # def transition(current_state: MachineState, control_word: int, desired_state: DesiredState) -> int:

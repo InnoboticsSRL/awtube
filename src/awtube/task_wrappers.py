@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """ 
-Task wrappers, they wrap coroutines with tasks and control the how they are executed
+Task wrappers, they wrap coroutines with tasks and control how they are executed
 using TWrapperResult, also they chain these running tasks with futures which can 
 be used to await, check running or cancel these tasks.
 """
@@ -60,8 +60,12 @@ class TWrapper(ABC):
                 await self._future
 
     async def _main(self):
-        result = await self._run()
-        self._future.set_result(result)
+        try:
+            result = await self._run()
+            self._future.set_result(result)
+        except asyncio.CancelledError:
+            await self.stop()
+            raise
 
     @abstractmethod
     async def _run(self):
@@ -75,9 +79,11 @@ class OneTimeTask(TWrapper):
         self.coro_callback = coro_callback
         self.args = args
         self.is_started = False
+        self._future = asyncio.Future(loop=threadloop.loop)
 
     async def _run(self):
-        return await self.coro_callback(self.args)
+        res = await self.coro_callback(self.args)
+        return res
 
 
 class PeriodicTask(TWrapper):

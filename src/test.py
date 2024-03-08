@@ -1,11 +1,11 @@
 from awtube.robot import Robot
-from awtube.types import MachineTarget
+# from awtube.types import MachineTarget
 
 a = Robot()
 
-a.startup()
+a.start()
 
-a.target = MachineTarget.SIMULATION
+# a.target = MachineTarget.SIMULATION
 
 a.enable()
 
@@ -68,7 +68,7 @@ try:
              "w": 5.3028761936245346e-17})
 finally:
     a.kill()
-    print('Finish')
+    print('Finished')
 
 
 # ---------------------------------------

@@ -21,14 +21,15 @@ class Observer(ABC):
     """
     _payload = None
     _timestamp = None
+    _updated = False
 
     @property
-    def payload(self) -> Any:
+    def payload(self):
         """ Return last payload stored. """
         return self._payload
 
     @property
-    def timestamp(self) -> Any:
+    def timestamp(self):
         """ Return timestamp of when payload was last updated. """
         return self._timestamp
 
@@ -54,8 +55,8 @@ class StatusObserver(Observer):
 
             # check reported errors and log
 
-            if self._payload.machine.operation_error != errors.OperationError.NONE:
-                self._logger.error(self._payload.machine.operation_error)
+            # if self._payload.machine.operation_error != errors.OperationError.NONE:
+            #     self._logger.error(self._payload.machine.operation_error)
 
         except KeyError as ke:
             # this means message doesn't contain status

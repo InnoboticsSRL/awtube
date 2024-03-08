@@ -10,6 +10,10 @@ class ThreadLoopNotRunningError(Exception):
     pass
 
 
+class CancelledTask(Exception):
+    pass
+
+
 class AwtubeError(IntEnum):
     NONE = 0
     BAD_ARGUMENT = 1

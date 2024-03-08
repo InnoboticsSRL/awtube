@@ -44,17 +44,60 @@ class HeartbeatCommad(Command):
 class IoutCommad(Command):
     def __init__(self,
                  receiver: command_receiver.CommandReceiver,
+                 position: int,
                  value: int = 1,
                  override: bool = True,
                  machine: int = 0) -> None:
         self._machine = machine
         self._receiver = receiver
+        self._position = position
         self._value = value
         self._override = override
 
     def execute(self) -> None:
-        msg = stream_command_builder.reset().iout(
-            self._value, override=self._override).build()
+        msg = stream_command_builder.reset().iout(self._position,
+                                                  self._value,
+                                                  override=self._override).build()
+        self._receiver.put(msg)
+
+
+class DoutCommad(IoutCommad):
+    def __init__(self,
+                 receiver: command_receiver.CommandReceiver,
+                 position: int,
+                 value: int = 1,
+                 override: bool = True,
+                 machine: int = 0) -> None:
+        self._machine = machine
+        self._receiver = receiver
+        self._position = position
+        self._value = value
+        self._override = override
+
+    def execute(self) -> None:
+        msg = stream_command_builder.reset().dout(self._position,
+                                                  self._value,
+                                                  override=self._override).build()
+        self._receiver.put(msg)
+
+
+class AoutCommad(IoutCommad):
+    def __init__(self,
+                 receiver: command_receiver.CommandReceiver,
+                 position: int,
+                 value: int = 1,
+                 override: bool = True,
+                 machine: int = 0) -> None:
+        self._machine = machine
+        self._receiver = receiver
+        self._position = position
+        self._value = value
+        self._override = override
+
+    def execute(self) -> None:
+        msg = stream_command_builder.reset().aout(self._position,
+                                                  self._value,
+                                                  override=self._override).build()
         self._receiver.put(msg)
 
 

@@ -7,6 +7,9 @@
 import logging.config
 from pythonjsonlogger import jsonlogger
 
+# LEVEL = "DEBUG"
+LEVEL = "ERROR"
+
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
@@ -25,7 +28,7 @@ LOGGING = {
             "formatter": "json",
         }
     },
-    "loggers": {"": {"handlers": ["stdout"], "level": "DEBUG"}},
+    "loggers": {"": {"handlers": ["stdout"], "level": LEVEL}},
 }
 
 
