@@ -29,7 +29,7 @@ class AWTubeErrorException(Exception):
         """ Return OperationError type """
         return self.__type
 
-    def __init__(self, operation_error_type: int = 0, message: str = '') -> None:
+    def __init__(self, operation_error_type: int = 0, message: str = ''):
         self.__type = AwtubeError(operation_error_type)
         self.__message = f'[{self.__type.name}]:{message}'
         super().__init__(self, self.__message)
@@ -63,7 +63,7 @@ class OperationError(IntEnum):
 #         """ Return OperationError type """
 #         return self.__type
 
-#     def __init__(self, operation_error_type: int = 0) -> None:
+#     def __init__(self, operation_error_type: int = 0):
 #         self.__type = OperationError(operation_error_type)
 #         self.__message = self.__type.name
 #         super().__init__(self, self.__message)
@@ -73,7 +73,7 @@ class HeartbeatFailure(Exception):
     """ Raised when heartbeat is not sent in predefined time slot. """
     pass
 
-    # def __init__(self, message="Heartbeat missed!") -> None:
+    # def __init__(self, message="Heartbeat missed!"):
     #     self.message = message
     #     super().__init__(self.message)
 
@@ -82,6 +82,6 @@ class TelemetryLoss(Exception):
     """ Raised when telemetry is not recieved in predefined time slot. """
     pass
 
-    # def __init__(self, message="Heartbeat missed!") -> None:
+    # def __init__(self, message="Heartbeat missed!"):
     #     self.message = message
     #     super().__init__(self.message)

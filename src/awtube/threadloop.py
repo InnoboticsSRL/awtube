@@ -20,7 +20,7 @@ from . import errors
 
 
 class ThreadLoop(Thread):
-    def __init__(self) -> None:
+    def __init__(self):
         Thread.__init__(self)
         self._logger = logging.getLogger(self.__class__.__name__)
         self.daemon = True
@@ -41,7 +41,7 @@ class ThreadLoop(Thread):
             self._handle_exceptions(), loop=self.loop)
         self.loop.run_forever()
 
-    async def _handle_exceptions(self) -> None:
+    async def _handle_exceptions(self):
         while True:
             if not self._exception_queue.empty():
                 exc = self._exception_queue.get(block=False)
@@ -59,7 +59,7 @@ class ThreadLoop(Thread):
 
             await asyncio.sleep(2)
 
-    def register_exception(self, exc) -> None:
+    def register_exception(self, exc):
         self._exception_queue.put(exc)
 
     async def cancel_tasks(self):

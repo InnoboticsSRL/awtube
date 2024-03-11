@@ -21,7 +21,7 @@ class CommandReceiver(ABC):
     fact, any class may serve as a Receiver.
     """
     @abstractmethod
-    def put(self, message: str) -> None:
+    def put(self, message: str):
         """ Put new command in queue for execution.
 
         Args:
@@ -68,16 +68,16 @@ class WebsocketThread(CommandReceiver):
         self._tasks = [self.listen_queue, self.listen_socket]
         self._observers = []
 
-    def attach_observer(self, sub: Observer) -> None:
+    def attach_observer(self, sub: Observer):
         """ Attach Observer. """
         if sub not in self._observers:
             self._observers.append(sub)
 
-    def detach_observer(self, sub: Observer) -> None:
+    def detach_observer(self, sub: Observer):
         """ Detach Observer. """
         self._observers.remove(sub)
 
-    def notify(self, msg: str) -> None:
+    def notify(self, msg: str):
         """ Notify all attached observers. """
         if not self._observers:
             return
@@ -114,7 +114,7 @@ class WebsocketThread(CommandReceiver):
                 except queue.Empty:
                     continue
 
-    def put(self, message: str) -> None:
+    def put(self, message: str):
         """ Put message in the receivers queue. """
         self.outgoing.put(message)
         # print(message)

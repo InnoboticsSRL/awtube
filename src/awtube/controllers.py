@@ -27,22 +27,22 @@ class Controller(ABC):
     _main_task: asyncio.Task = None
 
     @abstractmethod
-    def _get_task(self, command) -> None | task_wrappers.TWrapper:
+    def _get_task(self, command) -> task_wrappers.TWrapper:
         """ 
             Here is to be defined how the controller handles commands, by matching each
             command with a certain TWrapper.
         """
 
-    async def start(self) -> None:
+    async def start(self):
         """ Start the main loop. """
         self._main_task = asyncio.create_task(self._run())
         await self._main_task
 
-    def pause(self) -> None:
+    def pause(self):
         """ Pause the main loop. """
         self._paused_execution = True
 
-    def stop(self) -> None:
+    def stop(self):
         """ Stop the main loop of controller. """
         try:
             if self._main_task:
@@ -53,7 +53,7 @@ class Controller(ABC):
                 'Could not stop main loop of %s', self.__class__.__name__)
             raise
 
-    def clear_queue(self) -> None:
+    def clear_queue(self):
         """ Clear current queue. """
         self._command_queue.queue.clear()
 
@@ -76,7 +76,7 @@ class Controller(ABC):
         self._command_queue.queue.appendleft(item)
         return task
 
-    async def _run(self) -> None:
+    async def _run(self):
         while True:
 
             if not self._logger:
@@ -99,7 +99,7 @@ class Controller(ABC):
 
 
 class MachineController(Controller):
-    def __init__(self, status_observer: observers.StatusObserver) -> None:
+    def __init__(self, status_observer: observers.StatusObserver):
         self._logger = logging.getLogger(self.__class__.__name__)
         self._observer = status_observer
         self.heartbeat_cmd = None
@@ -107,7 +107,7 @@ class MachineController(Controller):
         self._current_cia402_cmd = None
         self._current_cw = 128
 
-    def _get_task(self, command) -> None | task_wrappers.TWrapper:
+    def _get_task(self, command) -> task_wrappers.TWrapper:
         if isinstance(command, commands.HeartbeatCommad):
             return task_wrappers.PeriodicTask(
                 coro_callback=self._heartbeat_callback,
@@ -117,7 +117,8 @@ class MachineController(Controller):
         elif isinstance(command, (
                 commands.KinematicsConfigurationCommad,
                 commands.IoutCommad,
-                commands.DoutCommad)):
+                commands.DoutCommad,
+                commands.MachineTargetCommad)):
             return task_wrappers.OneTimeTask(
                 coro_callback=self._one_time_callback,
                 args=(command))
@@ -132,7 +133,7 @@ class MachineController(Controller):
             self._logger.error(
                 'This controller cannot handle commands of type: %s', type(command))
 
-    async def _heartbeat_callback(self, cmd: None | commands.HeartbeatCommad) -> None | task_wrappers.TWrapperResult:
+    async def _heartbeat_callback(self, cmd):
         if not self.heartbeat_cmd:
             self.heartbeat_cmd = cmd
         if not self._observer.payload:
@@ -151,12 +152,11 @@ class MachineController(Controller):
 
         return task_wrappers.TWrapperResult.RUNNING
 
-    async def _one_time_callback(self, cmd: None | commands.KinematicsConfigurationCommad) -> None | task_wrappers.TWrapperResult:
+    async def _one_time_callback(self, cmd):
         self._logger.error('Executing %s', type(cmd).__name__)
-        self._logger.error(cmd)
         cmd.execute()
 
-    async def _machine_state_callback(self, cmd: commands.MachineStateCommad) -> None | task_wrappers.TWrapperResult:
+    async def _machine_state_callback(self, cmd):
 
         if not self._current_cia402_cmd:
             self._current_cia402_cmd = cmd
@@ -185,7 +185,7 @@ class MachineController(Controller):
 
 
 class StreamController(Controller):
-    def __init__(self, stream_observer: observers.StreamObserver) -> None:
+    def __init__(self, stream_observer: observers.StreamObserver):
         self._logger = logging.getLogger(self.__class__.__name__)
         self._buffer_cushion = 35
         self._observer = stream_observer
@@ -193,7 +193,7 @@ class StreamController(Controller):
         self._current_tag = 0
         self._single_cmd_running = False
 
-    def _get_task(self, command) -> None | task_wrappers.TWrapper:
+    def _get_task(self, command) -> task_wrappers.TWrapper:
         if isinstance(command,
                       (
                           commands.MoveLineCommand,
@@ -219,7 +219,7 @@ class StreamController(Controller):
             self._logger.error(
                 'This controller cannot handle commands of type: %s', type(command))
 
-    async def _stream_cmd_callback(self, cmd: None | commands.Command) -> None | task_wrappers.TWrapperResult:
+    async def _stream_cmd_callback(self, cmd: None | commands.Command) -> task_wrappers.TWrapperResult:
         if cmd.command_type is types.StreamCommandType.STOP:
             self.clear_queue()
             cmd.execute()
@@ -228,7 +228,7 @@ class StreamController(Controller):
         if cmd.command_type is types.StreamCommandType.RUN:
             cmd.execute()
 
-    def _execute_cmd(self, cmd) -> None:
+    def _execute_cmd(self, cmd):
         cmd.tag = self._current_tag + 1
         cmd.execute()
         self._current_tag = cmd.tag

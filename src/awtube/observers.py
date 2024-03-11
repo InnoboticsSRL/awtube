@@ -34,7 +34,7 @@ class Observer(ABC):
         return self._timestamp
 
     @abstractmethod
-    def update(self, message: object) -> None:
+    def update(self, message: object):
         """ Receive update from subject and update payload. """
         raise NotImplementedError
 
@@ -44,10 +44,10 @@ class StatusObserver(Observer):
     Observes the 'status' field  in the ws stream and keeps a Status object as payload
     """
 
-    def __init__(self) -> None:
+    def __init__(self):
         self._logger = logging.getLogger(self.__class__.__name__)
 
-    def update(self, message: str) -> None:
+    def update(self, message: str):
         try:
             js = json.loads(message)
             self._payload = Status(**js['status'])
@@ -70,10 +70,10 @@ class StreamObserver(Observer):
     Observes the 'stream' field  in the ws stream and keeps a StreamStatus object as payload
     """
 
-    def __init__(self) -> None:
+    def __init__(self):
         self._logger = logging.getLogger(self.__class__.__name__)
 
-    def update(self, message: str) -> None:
+    def update(self, message: str):
         try:
             js = json.loads(message)
             # TODO: stream array id ??????
@@ -92,10 +92,10 @@ class TelemetryObserver(Observer):
     The Observer interface declares the update coroutine, used by subjects.
     """
 
-    def __init__(self) -> None:
+    def __init__(self):
         self._logger = logging.getLogger(self.__class__.__name__)
 
-    def update(self, message: str) -> None:
+    def update(self, message: str):
         try:
             js = json.loads(message)
             # TODO: stream array id ??????

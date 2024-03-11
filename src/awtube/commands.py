@@ -21,7 +21,7 @@ class Command(ABC):
     receiver = None
 
     @abstractmethod
-    def execute(self) -> None:
+    def execute(self):
         """ Put command payload in receiver queue. """
         raise NotImplementedError
 
@@ -30,12 +30,12 @@ class HeartbeatCommad(Command):
     def __init__(self,
                  receiver: command_receiver.CommandReceiver,
                  frequency: int = 1,
-                 machine: int = 0) -> None:
+                 machine: int = 0):
         self._machine = machine
         self._receiver = receiver
         self._frequency = frequency
 
-    def execute(self) -> None:
+    def execute(self):
         msg = stream_command_builder.reset().machine(
             self._machine).heartbeat(self._heartbeat).build()
         self._receiver.put(msg)
@@ -47,54 +47,54 @@ class IoutCommad(Command):
                  position: int,
                  value: int = 1,
                  override: bool = True,
-                 machine: int = 0) -> None:
+                 machine: int = 0):
         self._machine = machine
         self._receiver = receiver
         self._position = position
         self._value = value
         self._override = override
 
-    def execute(self) -> None:
+    def execute(self):
         msg = stream_command_builder.reset().iout(self._position,
                                                   self._value,
                                                   override=self._override).build()
         self._receiver.put(msg)
 
 
-class DoutCommad(IoutCommad):
+class DoutCommad(Command):
     def __init__(self,
                  receiver: command_receiver.CommandReceiver,
                  position: int,
                  value: int = 1,
                  override: bool = True,
-                 machine: int = 0) -> None:
+                 machine: int = 0):
         self._machine = machine
         self._receiver = receiver
         self._position = position
         self._value = value
         self._override = override
 
-    def execute(self) -> None:
+    def execute(self):
         msg = stream_command_builder.reset().dout(self._position,
                                                   self._value,
                                                   override=self._override).build()
         self._receiver.put(msg)
 
 
-class AoutCommad(IoutCommad):
+class AoutCommad(Command):
     def __init__(self,
                  receiver: command_receiver.CommandReceiver,
                  position: int,
                  value: int = 1,
                  override: bool = True,
-                 machine: int = 0) -> None:
+                 machine: int = 0):
         self._machine = machine
         self._receiver = receiver
         self._position = position
         self._value = value
         self._override = override
 
-    def execute(self) -> None:
+    def execute(self):
         msg = stream_command_builder.reset().aout(self._position,
                                                   self._value,
                                                   override=self._override).build()
@@ -104,40 +104,40 @@ class AoutCommad(IoutCommad):
 class KinematicsConfigurationCommad(Command):
     def __init__(self,
                  receiver: command_receiver.WebsocketThread,
-                 disable_limits: (bool, None) = None,
-                 target_feed_rate: (float, int, None) = None,
-                 kc_config: int = 0) -> None:
-        self._disable_limits = disable_limits
+                 safe_limits: bool,
+                 target_feed_rate=None,
+                 kc_config: int = 0):
+        self._safe_limits = safe_limits
         self._target_feed_rate = target_feed_rate
         self._receiver = receiver
         self._kc_config = kc_config
 
     @property
-    def disable_limits(self) -> bool:
-        return self._disable_limits
+    def safe_limits(self) -> bool:
+        return self._safe_limits
 
-    @disable_limits.setter
-    def disable_limits(self, value: bool) -> None:
+    @safe_limits.setter
+    def safe_limits(self, value: bool):
         if not isinstance(value, bool):
             raise errors.AWTubeErrorException(
                 errors.AwtubeError.BAD_ARGUMENT, 'Limits disabled flag should be a bool type.')
-        self._disable_limits = value
+        self._safe_limits = value
 
     @property
     def target_feed_rate(self) -> bool:
         return self._target_feed_rate
 
     @target_feed_rate.setter
-    def target_feed_rate(self, value: (float, int)) -> None:
+    def target_feed_rate(self, value: (float, int)):
         if not isinstance(value, (float, int)):
             raise errors.AWTubeErrorException(
                 errors.AwtubeError.BAD_ARGUMENT, 'Feed rate should be a float or int type.')
         self._target_feed_rate = value
 
-    def execute(self) -> None:
+    def execute(self):
         msg = None
-        if self._disable_limits:
-            msg = stream_command_builder.reset().disable_limits(self._disable_limits).build()
+        if self._safe_limits:
+            msg = stream_command_builder.reset().safe_limits(self._safe_limits).build()
             self._receiver.put(msg)
             return
         elif self._target_feed_rate:
@@ -151,7 +151,7 @@ class MachineStateCommad(Command):
     def __init__(self,
                  receiver: command_receiver.AWTubeErrorException,
                  desired_state: cia402.DesiredState,
-                 machine: int = 0) -> None:
+                 machine: int = 0):
         self._desired_state = desired_state
         self._control_word = 0
         self._machine = machine
@@ -166,7 +166,7 @@ class MachineStateCommad(Command):
         return self._control_word
 
     @control_word.setter
-    def control_word(self, cw: int) -> None:
+    def control_word(self, cw: int):
         self._control_word = cw
 
     @property
@@ -174,14 +174,14 @@ class MachineStateCommad(Command):
         return self._receiver
 
     @receiver.setter
-    def receiver(self, cw: int) -> None:
+    def receiver(self, cw: int):
         self._receiver = cw
 
     @property
     def machine(self) -> cia402.CIA402MachineState:
         return self.machine
 
-    def execute(self) -> None:
+    def execute(self):
         msg = stream_command_builder.reset().machine(self._machine).control_word(
             self._control_word).build()
         self._receiver.put(msg)
@@ -189,9 +189,9 @@ class MachineStateCommad(Command):
 
 class MachineTargetCommad(Command):
     def __init__(self,
-                 receiver: command_receiver.AWTubeErrorException,
+                 receiver: command_receiver.CommandReceiver,
                  target: types.MachineTarget,
-                 machine: int = 0) -> None:
+                 machine: int = 0):
         self._receiver = receiver
         self._machine = machine
         self._target = target
@@ -201,10 +201,10 @@ class MachineTargetCommad(Command):
         return self._target
 
     @target.setter
-    def target(self, cw: int) -> None:
-        self._target = cw
+    def target(self, value: int):
+        self._target = value
 
-    def execute(self) -> None:
+    def execute(self):
         msg = stream_command_builder.reset().machine(
             self._machine).machine_target(self._target).build()
         self._receiver.put(msg)
@@ -216,14 +216,14 @@ class MoveJointsInterpolatedCommand(Command):
                  joint_positions: tp.List[float],
                  joint_velocities: tp.List[float],
                  tag: int = 0,
-                 kc: int = 0) -> None:
+                 kc: int = 0):
         self.joints = types.JointStates(positions=joint_positions,
                                         velocities=joint_velocities)
         self._receiver = receiver
         self.tag = tag
         self.kc = kc
 
-    def execute(self) -> None:
+    def execute(self):
         msg = stream_activity_builder.reset().move_joints_interpolated(joint_position_array=self.joints.positions,
                                                                        joint_velocity_array=self.joints.velocities,
                                                                        tag=self.tag,
@@ -238,13 +238,13 @@ class MoveJointsCommand(Command):
                  receiver: command_receiver.AWTubeErrorException,
                  joint_positions: tp.List[float],
                  tag: int = 0,
-                 kc: int = 0) -> None:
+                 kc: int = 0):
         self.joints = joint_positions
         self._receiver = receiver
         self.tag = tag
         self.kc = kc
 
-    def execute(self) -> None:
+    def execute(self):
         msg = stream_activity_builder.reset().move_joints(joint_position_array=self.joints,
                                                           tag=self.tag,
                                                           kc=self.kc,
@@ -259,14 +259,14 @@ class MoveLineCommand(Command):
                  translation: tp.Dict[str, float],
                  rotation: tp.Dict[str, float],
                  tag: int = 0,
-                 kc: int = 0) -> None:
+                 kc: int = 0):
         self.pose = types.Pose(position=types.Position(**translation),
                                orientation=types.Quaternion(**rotation))
         self._receiver = receiver
         self.tag = tag
         self.kc = kc
 
-    def execute(self) -> None:
+    def execute(self):
         msg = stream_activity_builder.reset().move_line(pose=self.pose,
                                                         tag=self.tag,
                                                         kc=self.kc,
@@ -281,14 +281,14 @@ class MoveToPositionCommand(Command):
                  pose: types.Pose,
                  tag: int = 0,
                  kc: int = 0,
-                 position_reference: types.PositionReference = types.PositionReference.ABSOLUTE) -> None:
+                 position_reference: types.PositionReference = types.PositionReference.ABSOLUTE):
         self._receiver = receiver
         self.tag = tag
         self.pose = pose
         self.kc = kc
         self.position_reference = position_reference
 
-    def execute(self) -> None:
+    def execute(self):
         msg = stream_activity_builder.reset().move_to_position(pose=self.pose,
                                                                tag=self.tag,
                                                                kc=self.kc,
@@ -300,7 +300,7 @@ class MoveToPositionCommand(Command):
 class StreamCommand(Command):
     def __init__(self,
                  receiver: command_receiver.CommandReceiver,
-                 command: types.StreamCommandType) -> None:
+                 command: types.StreamCommandType):
         self._cmd = command
         self._receiver = receiver
 
@@ -309,9 +309,9 @@ class StreamCommand(Command):
         return self._cmd
 
     @command_type.setter
-    def command_type(self, value: types.StreamCommandType) -> None:
+    def command_type(self, value: types.StreamCommandType):
         self._cmd = value
 
-    def execute(self) -> None:
+    def execute(self):
         msg = stream_command_builder.reset().stream_command(self._cmd).build()
         self._receiver.put(msg)

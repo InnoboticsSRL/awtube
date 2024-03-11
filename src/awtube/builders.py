@@ -23,12 +23,12 @@ class Builder(ABC, BaseModel):
         return self._build_warnings
 
     @build_warnings.setter
-    def build_warnings(self, val: bool) -> None:
+    def build_warnings(self, val: bool):
         """ Flag to activate warnings during build of json. """
         self._build_warnings = val
 
     @abstractmethod
-    def build(self) -> None:
+    def build(self):
         raise NotImplementedError
 
 
@@ -67,12 +67,12 @@ class StreamCommandBuilder(Builder):
         self._kc = value
         return self
 
-    def disable_limits(self, value: bool = False) -> StreamCommandBuilder:
+    def safe_limits(self, value: bool = False) -> StreamCommandBuilder:
         self.command = {
             "kinematicsConfiguration": {
                 f"{self._kc}": {
                     "command": {
-                        "disableLimits": value
+                        "disableLimits": not value
                     }
                 }}}
         return self
@@ -115,7 +115,7 @@ class StreamCommandBuilder(Builder):
                 }}}
         return self
 
-    def dout(self, position: int,value: int, override: bool = True) -> StreamCommandBuilder:
+    def dout(self, position: int, value: int, override: bool = True) -> StreamCommandBuilder:
         self.command = {
             "dout": {
                 f"{position}": {
@@ -126,7 +126,7 @@ class StreamCommandBuilder(Builder):
                 }}}
         return self
 
-    def aout(self, position: int,value: int, override: bool = True) -> StreamCommandBuilder:
+    def aout(self, position: int, value: int, override: bool = True) -> StreamCommandBuilder:
         self.command = {
             "aout": {
                 f"{position}": {
@@ -139,7 +139,7 @@ class StreamCommandBuilder(Builder):
 
     def machine_target(self, value: int) -> StreamCommandBuilder:
         self.command = {
-            "kinematicsConfiguration": {
+            "machine": {
                 f"{self._machine}": {
                     "command": {
                         "target": int(value)
@@ -193,7 +193,7 @@ class StreamActivityBuilder(Builder):
         return self._items
 
     @items.setter
-    def items(self, val) -> None:
+    def items(self, val):
         self._items = val
 
     def reset(self) -> StreamActivityBuilder:

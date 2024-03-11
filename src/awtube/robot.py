@@ -1,26 +1,18 @@
 #!/usr/bin/env python3
 
-"""                                        
-    Class which puts everything together, commanders, observers and robot functions.
-    This class defines the API of the robot, the user interfaces with this class.
-    
-    This API basically is divided into two subprocesses where the primary subprocess is 
-    a sort of frontend where new commands are queued and the secondary subprocess does 
-    the looping needed to maintain alive the connection with the motion controller and 
-    execute those queued commands.
+""" 
+    Robot offers all possible ways to interact with the machine.                                     
 """
 
 from __future__ import annotations
 import logging
 import typing as tp
 
-from . import command_receiver, observers, threadloop, controllers, errors, commands, types, cia402
+from . import command_receiver, controllers, observers, threadloop, errors, commands, types, cia402
 
 
 class Robot:
-    """
-        Class which puts everything together, commanders, observers and robot functions.
-    """
+    """Robot class used to interact with the robot arm."""
 
     def __init__(self,
                  robot_ip: str = "0.0.0.0",
@@ -29,6 +21,7 @@ class Robot:
                  name: str = "AWTube",
                  log_level: int | str = logging.INFO,
                  logger: logging.Logger | None = None):
+
         self._log_level = log_level
         self._logger = logging.getLogger(
             self.__class__.__name__) if logger is None else logger
@@ -53,20 +46,21 @@ class Robot:
         self.receiver.attach_observer(self.status_observer)
 
     def kill(self):
-        """ Cancel tasks and stop loop from sync, threadsafe """
+        """ Stop communication with robot. """
+        # Cancel tasks and stop loop from sync, threadsafe
         self._logger.debug('Killing robot.')
         self.killed = True
         self.disable()
         if threadloop.threadloop.loop.is_running():
             self.tloop.stop()
 
-    def start(self) -> None:
-        """ The startup procedure for the sync API """
+    def start(self):
+        """ Start communication with robot. """
         self.tloop.post(self.receiver.listen())
         self.tloop.post(self.stream_controller.start())
         self.tloop.post(self.machine_controller.start())
 
-    # def reset(self) -> None:
+    # def reset(self):
     #     """ Enable connection with GBC, commanding to go to OPERATION_ENABLED state. """
     #     self.tloop.post_wait(self.reset_async())
     #     self._logger.debug('Robot is reset!')
@@ -85,12 +79,17 @@ class Robot:
     #                                     desired_state=cia402.CIA402MachineState.SWITCH_ON_DISABLED))
     #     return await switch_on_disabled
 
-    def enable(self) -> None:
-        """ Enable connection with GBC, commanding to go to OPERATION_ENABLED state. """
+    def enable(self):
+        """Sync wrapper for :func:`~awtube.robot.Robot.enable_async`"""
         self.tloop.post_wait(self.enable_async())
         self._logger.debug('Robot is enabled!')
 
-    async def enable_async(self):
+    async def enable_async(self) -> tp.Generator:
+        """Enable machine by setting it's state to OPERATION_ENABLED coroutine.
+
+        Returns:
+            tp.Generator: _description_
+        """
         self.machine_controller.schedule_first(
             commands.HeartbeatCommad(self.receiver, frequency=1))
         operational = self.machine_controller.schedule_last(
@@ -98,46 +97,58 @@ class Robot:
                                         desired_state=cia402.CIA402MachineState.OPERATION_ENABLED))
         return await operational
 
-    def disable(self) -> None:
-        """ Disable connection with GBC. """
+    def disable(self):
+        """Sync wrapper for :func:`~awtube.robot.Robot.disable_async`"""
         self.tloop.post_wait(self.disable_async())
         self._logger.debug('Robot is disabled!')
 
     async def disable_async(self):
+        """ Disable robot. """
         disabled = self.machine_controller.schedule_last(
             commands.MachineStateCommad(self.receiver,
                                         desired_state=cia402.CIA402MachineState.SWITCH_ON_DISABLED))
         return await disabled
 
-    def set_dout(self, position: int, value: int, override: bool = True) -> None:
+    def set_dout(self, position: int, value: int, override: bool = True):
+        """Sync wrapper for :func:`~awtube.robot.Robot.set_dout_async`"""
         self.tloop.post_wait(self.set_dout_async(
             position=position,
             value=value,
             override=override))
         self._logger.debug(
-            'Set dout value:%s with override%s!', value, override)
+            'Set dout value:%s with override:%s.', value, override)
 
-    async def set_dout_async(self, position: int, value: int, override: bool) -> None:
+    async def set_dout_async(self, position: int, value: int, override: bool):
+        """ Send set digital out command. """
         return await self.machine_controller.schedule_last(
             commands.DoutCommad(self.receiver,
                                 position=position,
                                 value=value,
                                 override=override))
 
-    def set_speed(self, value: float) -> None:
+    def set_machine_target(self, target: types.MachineTarget):
+        self.tloop.post_wait(self.set_machine_target_async(target=target))
+        self._logger.debug(
+            'Set machine target:%s.', target)
+
+    async def set_machine_target_async(self, target: types.MachineTarget):
+        return await self.machine_controller.schedule_last(
+            commands.MachineTargetCommad(self.receiver, target=target))
+
+    def set_speed(self, value: float):
         """ Set speed (0-2). """
         self.tloop.post_wait(self.set_speed_async(value))
         self._logger.debug('Velocity is set to %.2f.', value)
 
-    def disable_limits(self, value: bool = True) -> None:
+    def set_safe_limits(self, value: bool = True):
         """ Disable internal safe limits of motion controller. """
-        self.tloop.post_wait(self.disable_limits_async(value))
+        self.tloop.post_wait(self.set_safe_limits_async(value))
         self._logger.debug('Safe limits is set to %s.', value)
 
-    async def disable_limits_async(self, value: bool):
+    async def set_safe_limits_async(self, value: bool):
         task = self.machine_controller.schedule_first(
             commands.KinematicsConfigurationCommad(
-                self.receiver, disable_limits=value)
+                self.receiver, safe_limits=value)
         )
         return await task
 
@@ -153,23 +164,23 @@ class Robot:
                                      command=command)
         self.stream_controller.schedule_first(cmd)
 
-    def stop_stream(self) -> None:
+    def stop_stream(self):
         """ Stop stream. Sets velocity to zero, to restart increase velocity and call run() """
         self.__cmd(types.StreamCommandType.STOP)
 
-    def pause_stream(self) -> None:
+    def pause_stream(self):
         """ Pause stream. Sets velocity to zero, to restart increase velocity and call run() """
         self.__cmd(types.StreamCommandType.PAUSE)
 
-    def run_stream(self) -> None:
+    def run_stream(self):
         """ Run stream. Used after stopping or pausing."""
         self.__cmd(types.StreamCommandType.RUN)
 
-    def move_joints_interpolated(self, points) -> None:
+    def move_joints_interpolated(self, points):
         """ Send a trajectory. """
         self.tloop.post_wait(self.move_joints_interpolated_async(points))
 
-    async def move_joints_interpolated_async(self, points) -> None:
+    async def move_joints_interpolated_async(self, points):
         """ Send a moveLine command to be executed by the controller. """
         cmds = [commands.MoveJointsInterpolatedCommand(
                 receiver=self.receiver,
@@ -180,7 +191,7 @@ class Robot:
 
     def move_line(self,
                   translation: tp.Dict[str, float],
-                  rotation: tp.Dict[str, float]) -> None:
+                  rotation: tp.Dict[str, float]):
         """ Send a moveLine command.
 
         Args:
@@ -202,7 +213,7 @@ class Robot:
     def move_to_position(self,
                          translation: tp.Dict[str, float],
                          rotation: tp.Dict[str, float],
-                         tag: int = 0) -> None:
+                         tag: int = 0):
         """ Send a moveToPosition command.
 
         Args:
@@ -216,7 +227,7 @@ class Robot:
 
     async def move_to_position_async(self,
                                      translation: tp.Dict[str, float],
-                                     rotation: tp.Dict[str, float]) -> None:
+                                     rotation: tp.Dict[str, float]):
         pose = types.Pose(position=types.Position(**translation),
                           orientation=types.Quaternion(**rotation))
         cmd = commands.MoveToPositionCommand(self.receiver, pose)
