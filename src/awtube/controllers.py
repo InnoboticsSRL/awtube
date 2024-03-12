@@ -153,7 +153,7 @@ class MachineController(Controller):
         return task_wrappers.TWrapperResult.RUNNING
 
     async def _one_time_callback(self, cmd):
-        self._logger.error('Executing %s', type(cmd).__name__)
+        self._logger.debug('Executing %s', type(cmd).__name__)
         cmd.execute()
 
     async def _machine_state_callback(self, cmd):

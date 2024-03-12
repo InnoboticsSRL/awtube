@@ -104,7 +104,7 @@ class AoutCommad(Command):
 class KinematicsConfigurationCommad(Command):
     def __init__(self,
                  receiver: command_receiver.WebsocketThread,
-                 safe_limits: bool,
+                 safe_limits: bool = None,
                  target_feed_rate=None,
                  kc_config: int = 0):
         self._safe_limits = safe_limits

@@ -1,6 +1,6 @@
 [project]
 name = "awtube"
-version = "0.0.1"
+version = "0.1.0"
 authors = [
   { name="Armando Selvija", email="selvija@automationware.it" },
 ]
