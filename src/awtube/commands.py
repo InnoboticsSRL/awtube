@@ -136,13 +136,14 @@ class KinematicsConfigurationCommad(Command):
 
     def execute(self):
         msg = None
-        if self._safe_limits:
-            msg = stream_command_builder.reset().safe_limits(self._safe_limits).build()
-            self._receiver.put(msg)
-            return
-        elif self._target_feed_rate:
+        
+        if self._target_feed_rate:
             msg = stream_command_builder.reset().desired_feedrate(
                 self._target_feed_rate).build()
+            self._receiver.put(msg)
+            return
+        else:
+            msg = stream_command_builder.reset().safe_limits(self._safe_limits).build()
             self._receiver.put(msg)
             return
 

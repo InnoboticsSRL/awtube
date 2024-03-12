@@ -3,7 +3,7 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
-<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="awtube" href="awtube.html" /><link rel="prev" title="awtube python library docs" href="index.html" />
+<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Robot" href="robot.html" /><link rel="prev" title="awtube python library docs" href="index.html" />
 
     <link rel="shortcut icon" href="_static/logo_aw.png"/><!-- Generated with Sphinx 7.2.6 and Furo 2024.01.29 -->
         <title>Introduction - awtube docs</title>
@@ -137,7 +137,7 @@
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
       </div>
-      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
         <div class="visually-hidden">Toggle table of contents sidebar</div>
         <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
       </label>
@@ -163,7 +163,10 @@
   <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="awtube.html">awtube</a></li>
+<li class="toctree-l1"><a class="reference internal" href="robot.html">Robot</a></li>
+<li class="toctree-l1"><a class="reference internal" href="types.html">Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="trajectories.html">Trajectories</a></li>
+<li class="toctree-l1"><a class="reference internal" href="awtube.html">other modules</a></li>
 </ul>
 
 </div>
@@ -192,7 +195,7 @@
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
           </div>
-          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
             <div class="visually-hidden">Toggle table of contents sidebar</div>
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
@@ -204,42 +207,22 @@
 <p class="admonition-title">Warning</p>
 <p>This project is under active development!</p>
 </div>
-<p>This project offers an API to interact with the AutomationWare cobot AWTube.</p>
-<p>It offers basic functions such as:</p>
-<ul class="simple">
-<li><p>move joints (<code class="xref py py-func docutils literal notranslate"><span class="pre">move_joints()</span></code>)</p></li>
-<li><p>move end effector to a positon (<a class="reference internal" href="awtube.html#awtube.robot.Robot.move_to_position" title="awtube.robot.Robot.move_to_position"><code class="xref py py-func docutils literal notranslate"><span class="pre">move_to_position()</span></code></a>)</p></li>
-<li><p>move end effector to a positon through a straight line (<a class="reference internal" href="awtube.html#awtube.robot.Robot.move_line" title="awtube.robot.Robot.move_line"><code class="xref py py-func docutils literal notranslate"><span class="pre">move_line()</span></code></a>)</p></li>
-<li><p>send a trajectory for the robot to execute (<a class="reference internal" href="awtube.html#awtube.robot.Robot.move_joints_interpolated" title="awtube.robot.Robot.move_joints_interpolated"><code class="xref py py-func docutils literal notranslate"><span class="pre">move_joints_interpolated()</span></code></a>)</p></li>
-</ul>
-<p>Example on how to use the API:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">awtube.robot</span> <span class="kn">import</span> <span class="n">Robot</span>
-
-<span class="n">robot</span> <span class="o">=</span> <span class="n">Robot</span><span class="p">(</span><span class="s1">&#39;102.168.0.0&#39;</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="s1">&#39;9001&#39;</span><span class="p">)</span>
-
-<span class="c1"># to start communication with robot</span>
-<span class="n">robot</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
-
-<span class="c1"># to enable the robot, activate the actuators</span>
-<span class="n">robot</span><span class="o">.</span><span class="n">enable</span><span class="p">()</span>
-
-<span class="c1"># send a move_line command</span>
-<span class="n">robot</span><span class="o">.</span><span class="n">move_line</span><span class="p">(</span>
-          <span class="p">{</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="mi">400</span><span class="p">,</span>
-           <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mi">50</span><span class="p">,</span>
-           <span class="s2">&quot;z&quot;</span><span class="p">:</span> <span class="mi">650</span><span class="p">},</span>
-          <span class="p">{</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="mf">0.8660254037844387</span><span class="p">,</span>
-           <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="mf">3.0616169978683824e-17</span><span class="p">,</span>
-           <span class="s2">&quot;z&quot;</span><span class="p">:</span> <span class="mf">0.49999999999999994</span><span class="p">,</span>
-           <span class="s2">&quot;w&quot;</span><span class="p">:</span> <span class="mf">5.3028761936245346e-17</span><span class="p">})</span>
-
-<span class="c1"># to disable the robot, deactivate actuators</span>
-<span class="n">robot</span><span class="o">.</span><span class="n">disable</span><span class="p">()</span>
-
-<span class="c1"># kill connection</span>
-<span class="n">robot</span><span class="o">.</span><span class="n">kill</span><span class="p">()</span>
+<a class="reference internal image-reference" href="_images/awtube.png"><img alt="AWTube cobot arm" src="_images/awtube.png" style="width: 700px;" /></a>
+<section id="build">
+<h2>Build<a class="headerlink" href="#build" title="Link to this heading">#</a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>-m<span class="w"> </span>build
 </pre></div>
 </div>
+</section>
+<section id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Link to this heading">#</a></h2>
+<p>Download .wheel file</p>
+<p>Install it
+.. code-block:: python</p>
+<blockquote>
+<div><p>pip install &lt;file&gt;</p>
+</div></blockquote>
+</section>
 </section>
 
         </article>
@@ -247,12 +230,12 @@
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="awtube.html">
+          <a class="next-page" href="robot.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">awtube</div>
+                <div class="title">Robot</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
@@ -285,8 +268,28 @@
         
       </footer>
     </div>
-    <aside class="toc-drawer no-toc">
+    <aside class="toc-drawer">
       
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Introduction</a><ul>
+<li><a class="reference internal" href="#build">Build</a></li>
+<li><a class="reference internal" href="#installation">Installation</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
       
       
     </aside>

@@ -51,7 +51,7 @@ class ThreadLoop(Thread):
                 elif isinstance(exc, KeyboardInterrupt):
                     self._logger.error(exc)
                     self.stop()
-                elif isinstance(exc, websockets.ConnectionClosedError):
+                elif isinstance(exc, ConnectionClosedError):
                     self._logger.error(exc)
                     self.stop()
                 else:

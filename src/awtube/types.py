@@ -166,7 +166,7 @@ class StreamStatus(BaseModel):
     time: int = Field(None)
     read_count: int = Field(None, alias='readCount')
     write_count: int = Field(None, alias='writeCount')
-
+  
 
 class ActivityStatus(BaseModel):
     tag: int = Field(None)
@@ -217,18 +217,21 @@ class MachineCommand(BaseModel):
         None, serialization_alias='controlWord'
     )
 
+class IOElement(BaseModel):
+    effectiveValue: int
+    setValue:int
+    override:bool
 
+class Serial(BaseModel):
+    data : list
+    length: int
+    statusWord: int
+    
 class Status(BaseModel):
     """ Status of the machine given by GBC. """
-    # machine status
     machine: MachineStatus = Field(None)
-    # kinematics configuration status
-    # kc: KinematicsConfigurationStatus = Field(None)
     kc: tp.List[KinematicsConfigurationStatus]
-
-    # TODO:
-    # tasks
-    # activity
-    # joints
-    # din
-    # dout
+    din: tp.List[bool]
+    dout: tp.List[IOElement]
+    iout: tp.List[IOElement]
+    serial: Serial

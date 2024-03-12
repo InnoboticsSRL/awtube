@@ -1,22 +1,9 @@
-awtube
-======
-
-awtube.robot
-------------
-
-.. automodule:: awtube.robot
-   :members:
-   :undoc-members:
-   :show-inheritance:
+other modules
+==============
 
 
-awtube.types
-------------
 
-.. automodule:: awtube.types
-   :members:
-   :undoc-members:
-   :show-inheritance:
+
 
 awtube.cia402
 -------------

@@ -6,13 +6,21 @@
 awtube python library docs
 ==========================
 
+
+.. image:: ../media/awtube_axis.png
+  :width: 700
+  :alt: AWTube cobot arm
+
 .. toctree::
   :maxdepth: 2
   :glob:
   :caption: Contents:
 
   intro
-  *
+  robot
+  types
+  trajectories
+  awtube
 
 Indices
 =======

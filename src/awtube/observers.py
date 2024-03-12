@@ -85,6 +85,27 @@ class StreamObserver(Observer):
             # self._logger.error(ke)
         except Exception as e:
             self._logger.error(e)
+            
+class IOObserver(Observer):
+    """
+    Observes the 'stream' field  in the ws stream and keeps a StreamStatus object as payload
+    """
+
+    def __init__(self):
+        self._logger = logging.getLogger(self.__class__.__name__)
+
+    def update(self, message: str):
+        try:
+            js = json.loads(message)
+            # TODO: stream array id ??????
+            self._payload = StreamStatus(**js['stream'][0])
+            self._timestamp = time.time()
+        except KeyError:
+            # this means message doesn't contain stream
+            pass
+            # self._logger.error(ke)
+        except Exception as e:
+            self._logger.error(e)
 
 
 class TelemetryObserver(Observer):

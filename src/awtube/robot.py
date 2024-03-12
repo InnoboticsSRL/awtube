@@ -84,12 +84,8 @@ class Robot:
         self.tloop.post_wait(self.enable_async())
         self._logger.debug('Robot is enabled!')
 
-    async def enable_async(self) -> tp.Generator:
-        """Enable machine by setting it's state to OPERATION_ENABLED coroutine.
-
-        Returns:
-            tp.Generator: _description_
-        """
+    async def enable_async(self):
+        """ Enable machine by setting it's state to OPERATION_ENABLED coroutine. """
         self.machine_controller.schedule_first(
             commands.HeartbeatCommad(self.receiver, frequency=1))
         operational = self.machine_controller.schedule_last(
@@ -120,11 +116,12 @@ class Robot:
 
     async def set_dout_async(self, position: int, value: int, override: bool):
         """ Send set digital out command. """
-        return await self.machine_controller.schedule_last(
+        task =  self.machine_controller.schedule_last(
             commands.DoutCommad(self.receiver,
                                 position=position,
                                 value=value,
                                 override=override))
+        return await task
 
     def set_machine_target(self, target: types.MachineTarget):
         self.tloop.post_wait(self.set_machine_target_async(target=target))
@@ -136,9 +133,16 @@ class Robot:
             commands.MachineTargetCommad(self.receiver, target=target))
 
     def set_speed(self, value: float):
-        """ Set speed (0-2). """
+        """ Set speed (0.0-2.0). """
         self.tloop.post_wait(self.set_speed_async(value))
         self._logger.debug('Velocity is set to %.2f.', value)
+    
+    async def set_speed_async(self, value: float):
+        task = self.machine_controller.schedule_first(
+            commands.KinematicsConfigurationCommad(
+                self.receiver, target_feed_rate=value)
+        )
+        return await task
 
     def set_safe_limits(self, value: bool = True):
         """ Disable internal safe limits of motion controller. """
@@ -149,13 +153,6 @@ class Robot:
         task = self.machine_controller.schedule_first(
             commands.KinematicsConfigurationCommad(
                 self.receiver, safe_limits=value)
-        )
-        return await task
-
-    async def set_speed_async(self, value: float):
-        task = self.machine_controller.schedule_first(
-            commands.KinematicsConfigurationCommad(
-                self.receiver, target_feed_rate=value)
         )
         return await task
 
@@ -186,27 +183,37 @@ class Robot:
                 receiver=self.receiver,
                 joint_positions=pt.positions,
                 joint_velocities=pt.velocities) for pt in points]
-
         return await self.stream_controller.schedule_last(cmds)
 
     def move_line(self,
                   translation: tp.Dict[str, float],
                   rotation: tp.Dict[str, float]):
-        """ Send a moveLine command.
-
-        Args:
-            translation (tp.Dict[str, float]): {'x', 'y', 'z'}
-            rotation (tp.Dict[str, float]): Quaternion {'x', 'y', 'z', 'w'}
-        """
+        """Sync wrapper for :func:`~awtube.robot.Robot.move_line_async`"""
+        
         self.tloop.post_wait(self.move_line_async(translation,
                                                   rotation))
-        self._logger.debug('moveLine done')
 
     async def move_line_async(self,
                               translation: tp.Dict[str, float],
-                              rotation: tp.Dict[str, float]) -> types.FunctionResult:
+                              rotation: tp.Dict[str, float]):
+        """ Send a moveLine command.
+            translation dict with keys {'x', 'y', 'z'}
+            rotation dict with keys {'x', 'y', 'z', 'w'}
+        """
         cmd = commands.MoveLineCommand(
             self.receiver, translation, rotation)
+        task = self.stream_controller.schedule_last(cmd)
+        return await task
+    
+    def move_joints(self,joints:list):
+        """Sync wrapper for :func:`~awtube.robot.Robot.move_joints_async`"""
+        
+        self.tloop.post_wait(self.move_joints_async(joints))
+
+    async def move_joints_async(self,joints: list):
+        """ Send a moveJoints command. """
+        cmd = commands.MoveJointsCommand(
+            self.receiver,joint_positions = joints)
         task = self.stream_controller.schedule_last(cmd)
         return await task
 
