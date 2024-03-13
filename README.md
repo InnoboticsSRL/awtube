@@ -12,5 +12,7 @@ The code included in this repo is a library used to interact with the AWTube rob
 ### To build
 ``` python3 -m build``` build a .tar.gz and a .whl in `dist/` as explained [here](https://packaging.python.org/en/latest/guides/distributing-packages-using-setuptools/#packaging-your-project)
 
-### To run tests
-``` python3 -m pytest ```
+### To build docs
+``` cd docs ```
+``` make clean ```
+``` make html ```

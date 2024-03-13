@@ -7,7 +7,7 @@ awtube python library docs
 ==========================
 
 
-.. image:: ../media/awtube_axis.png
+.. image:: ../media/awtube.png
   :width: 700
   :alt: AWTube cobot arm
 

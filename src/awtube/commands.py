@@ -81,6 +81,26 @@ class DoutCommad(Command):
         self._receiver.put(msg)
 
 
+class SerialCommad(Command):
+    def __init__(self,
+                 receiver: command_receiver.CommandReceiver,
+                 data: str,
+                 position: int = 0,
+                 machine: int = 0):
+        self._machine = machine
+        self._receiver = receiver
+        self._data = data
+        self._position = position
+
+    def execute(self):
+        data_l = self._data.replace(' ', '')
+        data_l = [int(data_l[i:i+2], 16) for i in range(0, len(data_l), 2)]
+        msg = stream_command_builder.reset().serial(self._position,
+                                                    data_l,
+                                                    control_word=1).build()
+        self._receiver.put(msg)
+
+
 class AoutCommad(Command):
     def __init__(self,
                  receiver: command_receiver.CommandReceiver,

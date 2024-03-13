@@ -6,7 +6,7 @@ Introduction
 
 
 
-.. image:: ../media/awtube.png
+.. image:: ../media/awtube_axis.png
   :width: 700
   :alt: AWTube cobot arm
 
@@ -20,8 +20,8 @@ Build
 Installation
 -------------
 
-Download .wheel file
+After downloading .wheel file
 
-Install it 
-.. code-block:: python
+.. code-block:: bash
+
   pip install <file>

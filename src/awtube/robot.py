@@ -37,6 +37,9 @@
       # set digital out
       robot.set_dout(0,1)
       
+      # send serial command through modbus RTU
+      robot.send_serial(0,'01 06 01 00 00 A5 48 4D')
+      
       # disable the robot, deactivate actuators
       robot.disable()
 
@@ -162,6 +165,19 @@ class Robot:
                                 position=position,
                                 value=value,
                                 override=override))
+        return await task
+
+    def send_serial(self, position: int, hex_string: int):
+        """Sync wrapper for :func:`~awtube.robot.Robot.send_serial_async`"""
+        self.tloop.post_wait(self.send_serial_async(
+            position,
+            hex_string))
+
+    async def send_serial_async(self, position: int, hex_string: int):
+        """ Send serial command. """
+        task = self.machine_controller.schedule_last(
+            commands.SerialCommad(self.receiver,
+                                  data=hex_string))
         return await task
 
     def set_machine_target(self, target: types.MachineTarget):

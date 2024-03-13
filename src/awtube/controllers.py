@@ -118,7 +118,8 @@ class MachineController(Controller):
                 commands.KinematicsConfigurationCommad,
                 commands.MachineTargetCommad,
                 commands.IoutCommad,
-                commands.DoutCommad)):
+                commands.DoutCommad,
+                commands.SerialCommad)):
             return task_wrappers.OneTimeTask(
                 coro_callback=self._one_time_callback,
                 args=(command))

@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 from abc import ABC, abstractmethod
+import typing
 from pydantic import BaseModel
 
 from awtube.types import ActivityType, PositionReference, Pose, MachineTarget, StreamCommandType
@@ -122,6 +123,18 @@ class StreamCommandBuilder(Builder):
                     "command": {
                         "setValue": value,
                         "override": override
+                    }
+                }}}
+        return self
+
+    def serial(self, position: int, data: typing.List[int], control_word: int) -> StreamCommandBuilder:
+        self.command = {
+            "serial": {
+                f"{position}": {
+                    "command": {
+                        "controlWord": control_word,
+                        "length": len(data),
+                        "data": data
                     }
                 }}}
         return self
