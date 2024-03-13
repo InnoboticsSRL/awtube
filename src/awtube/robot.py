@@ -1,7 +1,48 @@
 #!/usr/bin/env python3
 
 """ 
-    Robot offers all possible ways to interact with the machine.                                     
+    Robot offers all possible ways to interact with the machine.
+    
+    Example:
+
+    .. code-block:: python
+      
+      from awtube.robot import Robot
+      
+      robot = Robot('192.168.0.0', port='9001')
+      
+      # to start communication with robot
+      robot.start()
+      
+      # set the target of the system to either be the physical machine or the simulation
+      from awtube.types import MachineTarget
+      robot.set_machine_target(MachineTarget.SIMULATION)
+
+      # to enable the robot, activate the actuators
+      robot.enable()
+
+      # send a move_line command
+      robot.move_line(
+                {"x": 400,
+                "y": -50,
+                "z": 650},
+                {"x": 0.8660254037844387,
+                "y": 3.0616169978683824e-17,
+                "z": 0.49999999999999994,
+                "w": 5.3028761936245346e-17})
+      
+      # send a move_joints command
+      robot.move_joints([0,0,0,0,0,0])
+      
+      # set digital out
+      robot.set_dout(0,1)
+      
+      # disable the robot, deactivate actuators
+      robot.disable()
+
+      # kill connection
+      robot.kill()
+                               
 """
 
 from __future__ import annotations
@@ -81,7 +122,7 @@ class Robot:
 
     def enable(self):
         """Sync wrapper for :func:`~awtube.robot.Robot.enable_async`"""
-        self.tloop.post_wait(self.enable_async())
+        self.tloop.post_wait(self.enable_async(), timeout=15)
         self._logger.debug('Robot is enabled!')
 
     async def enable_async(self):
@@ -116,7 +157,7 @@ class Robot:
 
     async def set_dout_async(self, position: int, value: int, override: bool):
         """ Send set digital out command. """
-        task =  self.machine_controller.schedule_last(
+        task = self.machine_controller.schedule_last(
             commands.DoutCommad(self.receiver,
                                 position=position,
                                 value=value,
@@ -136,7 +177,7 @@ class Robot:
         """ Set speed (0.0-2.0). """
         self.tloop.post_wait(self.set_speed_async(value))
         self._logger.debug('Velocity is set to %.2f.', value)
-    
+
     async def set_speed_async(self, value: float):
         task = self.machine_controller.schedule_first(
             commands.KinematicsConfigurationCommad(
@@ -189,7 +230,7 @@ class Robot:
                   translation: tp.Dict[str, float],
                   rotation: tp.Dict[str, float]):
         """Sync wrapper for :func:`~awtube.robot.Robot.move_line_async`"""
-        
+
         self.tloop.post_wait(self.move_line_async(translation,
                                                   rotation))
 
@@ -204,16 +245,16 @@ class Robot:
             self.receiver, translation, rotation)
         task = self.stream_controller.schedule_last(cmd)
         return await task
-    
-    def move_joints(self,joints:list):
+
+    def move_joints(self, joints: list):
         """Sync wrapper for :func:`~awtube.robot.Robot.move_joints_async`"""
-        
+
         self.tloop.post_wait(self.move_joints_async(joints))
 
-    async def move_joints_async(self,joints: list):
-        """ Send a moveJoints command. """
+    async def move_joints_async(self, joints: list):
+        """ Send a moveJoints command. Joint position values are in radians."""
         cmd = commands.MoveJointsCommand(
-            self.receiver,joint_positions = joints)
+            self.receiver, joint_positions=joints)
         task = self.stream_controller.schedule_last(cmd)
         return await task
 

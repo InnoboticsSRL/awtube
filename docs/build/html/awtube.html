@@ -632,6 +632,19 @@
 <span id="awtube-observers"></span><h2>awtube.observers<a class="headerlink" href="#module-awtube.observers" title="Link to this heading">#</a></h2>
 <p>Defines the Observer Interface used to implement the observer pattern.</p>
 <dl class="py class">
+<dt class="sig sig-object py" id="awtube.observers.IOObserver">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">awtube.observers.</span></span><span class="sig-name descname"><span class="pre">IOObserver</span></span><a class="headerlink" href="#awtube.observers.IOObserver" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#awtube.observers.Observer" title="awtube.observers.Observer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Observer</span></code></a></p>
+<p>Observes the ‘stream’ field  in the ws stream and keeps a StreamStatus object as payload</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="awtube.observers.IOObserver.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#awtube.observers.IOObserver.update" title="Link to this definition">#</a></dt>
+<dd><p>Receive update from subject and update payload.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="awtube.observers.Observer">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">awtube.observers.</span></span><span class="sig-name descname"><span class="pre">Observer</span></span><a class="headerlink" href="#awtube.observers.Observer" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
@@ -866,6 +879,10 @@ updated frequently, thus they hold a timestamp also.</p>
 </ul>
 </li>
 <li><a class="reference internal" href="#module-awtube.observers">awtube.observers</a><ul>
+<li><a class="reference internal" href="#awtube.observers.IOObserver"><code class="docutils literal notranslate"><span class="pre">IOObserver</span></code></a><ul>
+<li><a class="reference internal" href="#awtube.observers.IOObserver.update"><code class="docutils literal notranslate"><span class="pre">IOObserver.update()</span></code></a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#awtube.observers.Observer"><code class="docutils literal notranslate"><span class="pre">Observer</span></code></a><ul>
 <li><a class="reference internal" href="#awtube.observers.Observer.payload"><code class="docutils literal notranslate"><span class="pre">Observer.payload</span></code></a></li>
 <li><a class="reference internal" href="#awtube.observers.Observer.timestamp"><code class="docutils literal notranslate"><span class="pre">Observer.timestamp</span></code></a></li>

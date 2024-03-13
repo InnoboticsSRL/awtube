@@ -92,9 +92,11 @@ class WebsocketThread(CommandReceiver):
         """ Listen to the websocket and local outgoing queue """
         try:
             async with websockets.connect(self.url, extra_headers=self.headers) as socket:
-                await asyncio.gather(*(task(socket) for task in self._tasks), return_exceptions=True)
+                await asyncio.gather(*(task(socket) for task in self._tasks), return_exceptions=False)
                 # await asyncio.gather(*(task(socket) for task in self._tasks))
         except Exception as e:
+            threadloop.register_exception(e)
+        except websockets.exceptions.WebSocketException as e:
             threadloop.register_exception(e)
 
     async def listen_socket(self, socket):
@@ -117,4 +119,3 @@ class WebsocketThread(CommandReceiver):
     def put(self, message: str):
         """ Put message in the receivers queue. """
         self.outgoing.put(message)
-        # print(message)

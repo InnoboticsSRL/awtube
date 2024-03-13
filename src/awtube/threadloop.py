@@ -12,6 +12,7 @@ import queue
 import time
 import typing
 import websockets
+import signal
 from threading import Thread, Condition
 
 from awtube import types
@@ -42,20 +43,21 @@ class ThreadLoop(Thread):
         self.loop.run_forever()
 
     async def _handle_exceptions(self):
+        def log_err(e): return self._logger.error('%s: %s', type(e), e)
         while True:
             if not self._exception_queue.empty():
                 exc = self._exception_queue.get(block=False)
                 if isinstance(exc, ConnectionRefusedError):
-                    self._logger.error(exc)
+                    log_err(exc)
                     self.stop()
                 elif isinstance(exc, KeyboardInterrupt):
-                    self._logger.error(exc)
+                    log_err(exc)
                     self.stop()
-                elif isinstance(exc, ConnectionClosedError):
-                    self._logger.error(exc)
+                elif isinstance(exc, websockets.exceptions.WebSocketException):
+                    log_err(exc)
                     self.stop()
                 else:
-                    self._logger.error(exc)
+                    log_err(exc)
 
             await asyncio.sleep(2)
 

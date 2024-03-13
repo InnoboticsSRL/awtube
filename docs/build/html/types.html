@@ -429,6 +429,27 @@
 </dd></dl>
 
 <dl class="py class">
+<dt class="sig sig-object py" id="awtube.types.IOElement">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">awtube.types.</span></span><span class="sig-name descname"><span class="pre">IOElement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">effectiveValue</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">setValue</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">override</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#awtube.types.IOElement" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="awtube.types.IOElement.effectiveValue">
+<span class="sig-name descname"><span class="pre">effectiveValue</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#awtube.types.IOElement.effectiveValue" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="awtube.types.IOElement.override">
+<span class="sig-name descname"><span class="pre">override</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#awtube.types.IOElement.override" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="awtube.types.IOElement.setValue">
+<span class="sig-name descname"><span class="pre">setValue</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#awtube.types.IOElement.setValue" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="awtube.types.JointStates">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">awtube.types.</span></span><span class="sig-name descname"><span class="pre">JointStates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">positions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">velocities</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">accelerations</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">torques</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#awtube.types.JointStates" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">NamedTuple</span></code></p>
@@ -718,10 +739,46 @@
 </dd></dl>
 
 <dl class="py class">
+<dt class="sig sig-object py" id="awtube.types.Serial">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">awtube.types.</span></span><span class="sig-name descname"><span class="pre">Serial</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">length</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">statusWord</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#awtube.types.Serial" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="awtube.types.Serial.data">
+<span class="sig-name descname"><span class="pre">data</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span></em><a class="headerlink" href="#awtube.types.Serial.data" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="awtube.types.Serial.length">
+<span class="sig-name descname"><span class="pre">length</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#awtube.types.Serial.length" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="awtube.types.Serial.statusWord">
+<span class="sig-name descname"><span class="pre">statusWord</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#awtube.types.Serial.statusWord" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="awtube.types.Status">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">awtube.types.</span></span><span class="sig-name descname"><span class="pre">Status</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">machine</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#awtube.types.MachineStatus" title="awtube.types.MachineStatus"><span class="pre">MachineStatus</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kc</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#awtube.types.KinematicsConfigurationStatus" title="awtube.types.KinematicsConfigurationStatus"><span class="pre">KinematicsConfigurationStatus</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#awtube.types.Status" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">awtube.types.</span></span><span class="sig-name descname"><span class="pre">Status</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">machine</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#awtube.types.MachineStatus" title="awtube.types.MachineStatus"><span class="pre">MachineStatus</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kc</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#awtube.types.KinematicsConfigurationStatus" title="awtube.types.KinematicsConfigurationStatus"><span class="pre">KinematicsConfigurationStatus</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">din</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">bool</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#awtube.types.IOElement" title="awtube.types.IOElement"><span class="pre">IOElement</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#awtube.types.IOElement" title="awtube.types.IOElement"><span class="pre">IOElement</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">serial</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#awtube.types.Serial" title="awtube.types.Serial"><span class="pre">Serial</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#awtube.types.Status" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
 <p>Status of the machine given by GBC.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="awtube.types.Status.din">
+<span class="sig-name descname"><span class="pre">din</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">bool</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#awtube.types.Status.din" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="awtube.types.Status.dout">
+<span class="sig-name descname"><span class="pre">dout</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#awtube.types.IOElement" title="awtube.types.IOElement"><span class="pre">IOElement</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#awtube.types.Status.dout" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="awtube.types.Status.iout">
+<span class="sig-name descname"><span class="pre">iout</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#awtube.types.IOElement" title="awtube.types.IOElement"><span class="pre">IOElement</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#awtube.types.Status.iout" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
 <dl class="py attribute">
 <dt class="sig sig-object py" id="awtube.types.Status.kc">
 <span class="sig-name descname"><span class="pre">kc</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#awtube.types.KinematicsConfigurationStatus" title="awtube.types.KinematicsConfigurationStatus"><span class="pre">KinematicsConfigurationStatus</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#awtube.types.Status.kc" title="Link to this definition">#</a></dt>
@@ -730,6 +787,11 @@
 <dl class="py attribute">
 <dt class="sig sig-object py" id="awtube.types.Status.machine">
 <span class="sig-name descname"><span class="pre">machine</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#awtube.types.MachineStatus" title="awtube.types.MachineStatus"><span class="pre">MachineStatus</span></a></em><a class="headerlink" href="#awtube.types.Status.machine" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="awtube.types.Status.serial">
+<span class="sig-name descname"><span class="pre">serial</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#awtube.types.Serial" title="awtube.types.Serial"><span class="pre">Serial</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#awtube.types.Status.serial" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -991,6 +1053,12 @@
 <li><a class="reference internal" href="#awtube.types.FunctionResult.SUCCESS"><code class="docutils literal notranslate"><span class="pre">FunctionResult.SUCCESS</span></code></a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#awtube.types.IOElement"><code class="docutils literal notranslate"><span class="pre">IOElement</span></code></a><ul>
+<li><a class="reference internal" href="#awtube.types.IOElement.effectiveValue"><code class="docutils literal notranslate"><span class="pre">IOElement.effectiveValue</span></code></a></li>
+<li><a class="reference internal" href="#awtube.types.IOElement.override"><code class="docutils literal notranslate"><span class="pre">IOElement.override</span></code></a></li>
+<li><a class="reference internal" href="#awtube.types.IOElement.setValue"><code class="docutils literal notranslate"><span class="pre">IOElement.setValue</span></code></a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#awtube.types.JointStates"><code class="docutils literal notranslate"><span class="pre">JointStates</span></code></a><ul>
 <li><a class="reference internal" href="#awtube.types.JointStates.accelerations"><code class="docutils literal notranslate"><span class="pre">JointStates.accelerations</span></code></a></li>
 <li><a class="reference internal" href="#awtube.types.JointStates.positions"><code class="docutils literal notranslate"><span class="pre">JointStates.positions</span></code></a></li>
@@ -1066,9 +1134,19 @@
 <li><a class="reference internal" href="#awtube.types.Quaternion.z"><code class="docutils literal notranslate"><span class="pre">Quaternion.z</span></code></a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#awtube.types.Serial"><code class="docutils literal notranslate"><span class="pre">Serial</span></code></a><ul>
+<li><a class="reference internal" href="#awtube.types.Serial.data"><code class="docutils literal notranslate"><span class="pre">Serial.data</span></code></a></li>
+<li><a class="reference internal" href="#awtube.types.Serial.length"><code class="docutils literal notranslate"><span class="pre">Serial.length</span></code></a></li>
+<li><a class="reference internal" href="#awtube.types.Serial.statusWord"><code class="docutils literal notranslate"><span class="pre">Serial.statusWord</span></code></a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#awtube.types.Status"><code class="docutils literal notranslate"><span class="pre">Status</span></code></a><ul>
+<li><a class="reference internal" href="#awtube.types.Status.din"><code class="docutils literal notranslate"><span class="pre">Status.din</span></code></a></li>
+<li><a class="reference internal" href="#awtube.types.Status.dout"><code class="docutils literal notranslate"><span class="pre">Status.dout</span></code></a></li>
+<li><a class="reference internal" href="#awtube.types.Status.iout"><code class="docutils literal notranslate"><span class="pre">Status.iout</span></code></a></li>
 <li><a class="reference internal" href="#awtube.types.Status.kc"><code class="docutils literal notranslate"><span class="pre">Status.kc</span></code></a></li>
 <li><a class="reference internal" href="#awtube.types.Status.machine"><code class="docutils literal notranslate"><span class="pre">Status.machine</span></code></a></li>
+<li><a class="reference internal" href="#awtube.types.Status.serial"><code class="docutils literal notranslate"><span class="pre">Status.serial</span></code></a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#awtube.types.StreamCommandType"><code class="docutils literal notranslate"><span class="pre">StreamCommandType</span></code></a><ul>

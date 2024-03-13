@@ -136,7 +136,7 @@ class KinematicsConfigurationCommad(Command):
 
     def execute(self):
         msg = None
-        
+
         if self._target_feed_rate:
             msg = stream_command_builder.reset().desired_feedrate(
                 self._target_feed_rate).build()
