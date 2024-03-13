@@ -12,10 +12,7 @@ import queue
 import time
 import typing
 import websockets
-import signal
 from threading import Thread, Condition
-
-from awtube import types
 
 from . import errors
 
@@ -62,6 +59,7 @@ class ThreadLoop(Thread):
             await asyncio.sleep(2)
 
     def register_exception(self, exc):
+        """ Register exceptions which the threadloop needs to handle """
         self._exception_queue.put(exc)
 
     async def cancel_tasks(self):

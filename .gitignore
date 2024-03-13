@@ -7,4 +7,5 @@ __pycache__
 /dist
 /env
 /awtube
-/docs/build/
+/docs/build/html
+/docs/build/doctrees
