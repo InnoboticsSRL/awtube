@@ -93,6 +93,7 @@ class Robot:
         """ Stop communication with robot. """
         # Cancel tasks and stop loop from sync, threadsafe
         self._logger.debug('Killing robot.')
+        self.disable()
         self.killed = True
         self.disable()
         if threadloop.threadloop.loop.is_running():
