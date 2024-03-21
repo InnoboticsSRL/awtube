@@ -8,3 +8,4 @@ __pycache__
 /env
 /awtube
 /docs/build/
+.venv/

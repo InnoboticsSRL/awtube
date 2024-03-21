@@ -290,7 +290,8 @@ class StreamActivityBuilder(Builder):
         return self
 
     def move_line(self,
-                  pose: Pose,
+                  translation: dict,
+                  rotation: dict,
                   tag: int,
                   kc: int,
                   move_params: dict) -> StreamActivityBuilder:
@@ -303,21 +304,22 @@ class StreamActivityBuilder(Builder):
                 "kinematicsConfigurationIndex": kc,
                 "line": {
                     "translation": {
-                        "x": pose.position.x,
-                        "y": pose.position.y,
-                        "z": pose.position.z
+                        "x": float(translation["x"]),
+                        "y": float(translation["y"]),
+                        "z": float(translation["z"])
                     },
                     "rotation": {
-                        "x": pose.orientation.x,
-                        "y": pose.orientation.y,
-                        "z": pose.orientation.z,
-                        "w": pose.orientation.w
+                        "x": float(rotation["x"]),
+                        "y": float(rotation["y"]),
+                        "z": float(rotation["z"]),
+                        "w": float(rotation["w"])
                     }
                 }}})
         return self
 
     def move_to_position(self,
-                         pose: Pose,
+                         translation: dict,
+                        rotation: dict,
                          tag: int,
                          kc: int,
                          move_params: dict,
@@ -332,22 +334,17 @@ class StreamActivityBuilder(Builder):
                 "cartesianPosition": {
                     "position": {
                         "translation": {
-                            "x": pose.position.x,
-                            "y": pose.position.y,
-                            "z": pose.position.z
+                            "x": float(translation["x"]),
+                            "y": float(translation["y"]),
+                            "z": float(translation["z"])
                         },
                         "rotation": {
-                            "x": pose.orientation.x,
-                            "y": pose.orientation.y,
-                            "z": pose.orientation.z,
-                            "w": pose.orientation.w
+                            "x": float(rotation["x"]),
+                            "y": float(rotation["y"]),
+                            "z": float(rotation["z"]),
+                            "w": float(rotation["w"])
                         },
-                        "frameIndex": {
-                            "x": pose.orientation.x,
-                            "y": pose.orientation.y,
-                            "z": pose.orientation.z,
-                            "w": pose.orientation.w
-                        },
+                        # "frameIndex": 0,
                         "positionReference": int(position_reference)},
                     "configuration": 0
                 }}})

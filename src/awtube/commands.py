@@ -283,12 +283,15 @@ class MoveLineCommand(Command):
                  kc: int = 0):
         self.pose = types.Pose(position=types.Position(**translation),
                                orientation=types.Quaternion(**rotation))
+        self._translation = translation
+        self._rotation = rotation
         self._receiver = receiver
         self.tag = tag
         self.kc = kc
 
     def execute(self):
-        msg = stream_activity_builder.reset().move_line(pose=self.pose,
+        msg = stream_activity_builder.reset().move_line(translation=self._translation,
+                                                        rotation=self._rotation,
                                                         tag=self.tag,
                                                         kc=self.kc,
                                                         move_params={}
@@ -299,18 +302,21 @@ class MoveLineCommand(Command):
 class MoveToPositionCommand(Command):
     def __init__(self,
                  receiver: command_receiver.CommandReceiver,
-                 pose: types.Pose,
+                 translation: dict,
+                 rotation: dict,
                  tag: int = 0,
                  kc: int = 0,
                  position_reference: types.PositionReference = types.PositionReference.ABSOLUTE):
         self._receiver = receiver
+        self._translation = translation
+        self._rotation=rotation
         self.tag = tag
-        self.pose = pose
         self.kc = kc
         self.position_reference = position_reference
 
     def execute(self):
-        msg = stream_activity_builder.reset().move_to_position(pose=self.pose,
+        msg = stream_activity_builder.reset().move_to_position(translation=self._translation,
+                                                               rotation=self._rotation,
                                                                tag=self.tag,
                                                                kc=self.kc,
                                                                move_params={},

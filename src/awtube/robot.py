@@ -293,8 +293,6 @@ class Robot:
     async def move_to_position_async(self,
                                      translation: tp.Dict[str, float],
                                      rotation: tp.Dict[str, float]):
-        pose = types.Pose(position=types.Position(**translation),
-                          orientation=types.Quaternion(**rotation))
-        cmd = commands.MoveToPositionCommand(self.receiver, pose)
+        cmd = commands.MoveToPositionCommand(self.receiver, translation,rotation)
         task = self.stream_controller.schedule_last(cmd)
         return await task
