@@ -196,7 +196,7 @@ class Robot:
         self._logger.debug('Velocity is set to %.2f.', value)
 
     async def set_speed_async(self, value: float):
-        task = self.machine_controller.schedule_first(
+        task = self.machine_controller.schedule_last(
             commands.KinematicsConfigurationCommad(
                 self.receiver, target_feed_rate=value)
         )

@@ -116,13 +116,19 @@ class MachineController(Controller):
 
         elif isinstance(command, (
                 commands.KinematicsConfigurationCommad,
-                commands.MachineTargetCommad,
                 commands.IoutCommad,
                 commands.DoutCommad,
                 commands.SerialCommad)):
             return task_wrappers.OneTimeTask(
                 coro_callback=self._one_time_callback,
                 args=(command))
+
+        elif isinstance(command, commands.MachineTargetCommad):
+            return task_wrappers.PeriodicUntilDoneTask(
+                coro_callback=self._set_check_callback,
+                args=(command),
+                sleep_time=0.5
+            )
 
         elif isinstance(command, commands.MachineStateCommad):
             return task_wrappers.PeriodicUntilDoneTask(
@@ -152,6 +158,14 @@ class MachineController(Controller):
         self.last_heartbeat_time = time.time()
 
         return task_wrappers.TWrapperResult.RUNNING
+
+    async def _set_check_callback(self, cmd):
+        if self._observer.payload.machine.target == cmd.target:
+            self._logger.error('Finished %s', type(cmd).__name__)
+            return task_wrappers.TWrapperResult.SUCCESS 
+        
+        
+        cmd.execute()
 
     async def _one_time_callback(self, cmd):
         self._logger.debug('Executing %s', type(cmd).__name__)
