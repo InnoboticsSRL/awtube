@@ -132,7 +132,7 @@ class Robot:
     async def enable_async(self):
         """ Enable machine by setting it's state to OPERATION_ENABLED coroutine. """
         self.machine_controller.schedule_first(
-            commands.HeartbeatCommad(self.receiver, frequency=1))
+            commands.HeartbeatCommad(self.receiver, frequency=2))
         operational = self.machine_controller.schedule_last(
             commands.MachineStateCommad(self.receiver,
                                         desired_state=cia402.CIA402MachineState.OPERATION_ENABLED))
