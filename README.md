@@ -16,5 +16,3 @@ The code included in this repo is a library used to interact with the AWTube rob
 ``` cd docs ```
 ``` make clean ```
 ``` make html ```
-
-Test edit
