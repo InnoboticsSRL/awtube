@@ -218,11 +218,20 @@ class MachineCommand(BaseModel):
     )
 
 
-class IOElement(BaseModel):
+class IntegerOutputElement(BaseModel):
     effectiveValue: int
     setValue: int
     override: bool
 
+class BooleanOutputElement(BaseModel):
+    effectiveValue: bool
+    setValue: int
+    override: bool
+
+class BooleanInputElement(BaseModel):
+    actValue: int
+    setValue: int
+    override: bool
 
 class Serial(BaseModel):
     data: list
@@ -234,8 +243,8 @@ class Status(BaseModel):
     """ Status of the machine given by GBC. """
     machine: MachineStatus = Field(None)
     kc: tp.List[KinematicsConfigurationStatus]
-    din: tp.List[bool]
-    dout: tp.List[IOElement]
-    iout: tp.List[IOElement]
+    din: tp.List[BooleanInputElement]
+    dout: tp.List[BooleanOutputElement]
+    iout: tp.List[IntegerOutputElement]
     # not all versions of GBC have it
     serial: tp.Optional[Serial] = None
